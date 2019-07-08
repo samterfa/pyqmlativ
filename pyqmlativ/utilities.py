@@ -10,48 +10,48 @@ try:
 except:
     pass
 
-allModules = ["Attendance", "Curriculum", "Demographics", "Discipline", "District",
-                "Enrollment", "Family", "GraduationRequirements", "Gradebook", "Grading", "Guidance", "Health", "MessageCenter",
-                "OnlineForm", "Reporting", "Scheduling", "Security", "Staff", "StaffPlanning", "Student", "Transportation"]
+all_modules = ["attendance", "curriculum", "demographics", "discipline", "district",
+                "enrollment", "family", "graduationRequirements", "gradebook", "grading", "guidance", "health", "messageCenter",
+                "onlineForm", "seporting", "scheduling", "security", "staff", "staffPlanning", "student", "transportation"]
 
 # This function checks the presence of necessary environmental variables before making API requests.
 def checkCredentials():
 
     try:
-        os.environ["apiUrl"]
+        os.environ["api_url"]
     except:
-        raise Exception('os.environ["apiUrl"] must be set! Should be of the form "https://skyward.iscorp.com/...StuAPI"')
+        raise Exception('os.environ["api_url"] must be set! Should be of the form "https://skyward.iscorp.com/...StuAPI"')
 
     try:
-        os.environ["consumerKey"]
+        os.environ["consumer_key"]
     except:
-        raise Exception('os.environ["consumerKey"] must be set!')
+        raise Exception('os.environ["consumer_key"] must be set!')
 
     try:
-        os.environ["consumerSecret"]
+        os.environ["consumer_secret"]
     except:
-        raise Exception('os.environ["consumerSecret"] must be set!')
+        raise Exception('os.environ["consumer_secret"] must be set!')
 
 # This function performs a QMLATIV API request.
 def makeRequest(endpoint, verb = 'get', params = None, payload = None):
     
     checkCredentials()
     
-    sess = OAuth1Session(client_key = os.environ["consumerKey"], client_secret = os.environ["consumerSecret"])
+    sess = OAuth1Session(client_key = os.environ["consumer_key"], client_secret = os.environ["consumer_secret"])
     
-    requestUrl = os.environ["apiUrl"] + endpoint
+    request_url = os.environ["api_url"] + endpoint
     
     if verb == 'get':
-        r = sess.get(requestUrl, params = params)
+        r = sess.get(request_url, params = params)
 
     elif verb == 'post':
-        r = sess.post(requestUrl, params = params, data = payload)
+        r = sess.post(request_url, params = params, data = payload)
 
     elif verb == 'put':
-        r = sess.put(requestUrl, params = params, data = payload)
+        r = sess.put(request_url, params = params, data = payload)
 
     elif verb == 'delete':
-        r = sess.delete(requestUrl, params = params)
+        r = sess.delete(request_url, params = params)
 
     else:
       raise Exception('"verb" must be one of get, post, put or delete')  
@@ -61,55 +61,55 @@ def makeRequest(endpoint, verb = 'get', params = None, payload = None):
     return(df)
 
 # This function generates api request functions.
-def generateFunctions(EntityID = 1, Modules = allModules):
+def generateFunctions(EntityID = 1, Modules = all_modules):
     
     # Open ini file to make sure newly created functions are imported.
-    iniFilePath = 'pyqmlativ/__init__.py'
-    iniFile = open(iniFilePath, "w")
-    iniFile.write('from .utilities import *')
+    ini_file_path = 'pyqmlativ/__init__.py'
+    ini_file = open(ini_file_path, "w")
+    ini_file.write('from .utilities import *')
 
     for Module in Modules:
         
         print('\n\nGenerating ' + Module + ' functions. ', end = '\n\n')
 
-        iniFile.write('\n\nimport pyqmlativ.' + Module)
+        ini_file.write('\n\nimport pyqmlativ.' + Module)
         
         # Create Module as a Python module.
-        ModuleFilePath = 'pyqmlativ/' + Module + '.py'
-        ModuleFile = open(ModuleFilePath, "w")
-        ModuleFile.write('# This module contains ' + Module + ' functions.')
-        ModuleFile = open(ModuleFilePath, "a")
+        module_file_path = 'pyqmlativ/' + Module + '.py'
+        module_file = open(module_file_path, "w")
+        module_file.write('# This module contains ' + Module + ' functions.')
+        module_file = open(module_file_path, "a")
 
-        ModuleEndpoint = '/'.join(['', 'Generic', str(EntityID), Module])
+        module_endpoint = '/'.join(['', 'Generic', str(EntityID), Module])
 
-        ObjectsAndEndpoints = makeRequest(ModuleEndpoint)
+        objects_and_endpoints = makeRequest(module_endpoint)
         
-        Objects = list(ObjectsAndEndpoints.index)
-        ObjectEndpoints = [ item['href'] for item in ObjectsAndEndpoints ]
+        Objects = list(objects_and_endpoints.index)
+        object_endpoints = [ item['href'] for item in objects_and_endpoints ]
 
-        for i in range(0, len(ObjectsAndEndpoints)):
+        for i in range(0, len(objects_and_endpoints)):
 
-            print(str(i+1) + '/' + str(len(ObjectEndpoints)), end='\r', flush=True)
+            print(str(i+1) + '/' + str(len(object_endpoints)), end='\r', flush=True)
 
-            Object = ObjectsAndEndpoints.index[i]
-            ObjectEndpoint = ObjectsAndEndpoints[i]['href']
+            Object = objects_and_endpoints.index[i]
+            object_endpoint = objects_and_endpoints[i]['href']
 
-            fields = makeRequest(ObjectEndpoint)
+            fields = makeRequest(object_endpoint)
         
-            idFieldIndex = [ 'PrimaryKey' in item for item in fields ].index(True)
-            idField = list(fields.keys())[idFieldIndex]
+            id_field_index = [ 'PrimaryKey' in item for item in fields ].index(True)
+            idField = list(fields.keys())[id_field_index]
 
             #### Create human-readable function names.
             
             # deleteObject()
             functionName = 'delete' + Object
 
-            ModuleFile.write('\n\ndef ' + functionName + '(' + idField + ', EntityID = 1):')
-            ModuleFile.write('\n\n\tmakeRequest(endpoint = "' + ObjectEndpoint.replace('/1/', '/" + EntityID + "/') + '/" + ' + idField + ', verb = "delete")')
+            module_file.write('\n\ndef ' + functionName + '(' + idField + ', EntityID = 1):')
+            module_file.write('\n\n\tmakeRequest(endpoint = "' + object_endpoint.replace('/1/', '/" + EntityID + "/') + '/" + ' + idField + ', verb = "delete")')
 
         return()
-        ModuleFile.close()
+        module_file.close()
 
-    iniFile.close()
+    ini_file.close()
         
     return()
