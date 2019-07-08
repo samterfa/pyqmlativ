@@ -5,6 +5,8 @@ import json
 import requests
 from requests_oauthlib import OAuth1Session
 
+import atexit
+
 try:
     import credentials
 except:
@@ -65,6 +67,20 @@ def generateFunctions(EntityID = 1, Modules = allModules):
     
     for Module in Modules:
         
+        # Open ini file to make sure newly created functions are imported.
+        iniFilePath = 'pyqmlativ/__init__.py'
+        iniFile = open(iniFilePath, "a")
+        iniFile.write('\n\nfrom .' + Module + ' import *')
+        iniFile.close()
+
+        # Create Module as a Python module.
+        ModuleFilePath = 'pyqmlativ/' + Module + '.py'
+        ModuleFile = open(ModuleFilePath, "w")
+
+        ModuleFile.write('Testing!\n')
+
+        continue
+
         ModuleEndpoint = '/'.join(['', 'Generic', str(EntityID), Module])
 
         ObjectsAndEndpoints = makeRequest(ModuleEndpoint)
@@ -80,3 +96,5 @@ def generateFunctions(EntityID = 1, Modules = allModules):
             fields = makeRequest(ObjectEndpoint)
 
             return(fields)
+        
+        ModuleFile.close()

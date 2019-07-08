@@ -11,3 +11,6 @@
 credentials.py
 
 .vscode/*
+
+*/.DS_Store
+.DS_Store
