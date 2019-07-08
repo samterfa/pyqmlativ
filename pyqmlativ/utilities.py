@@ -5,21 +5,42 @@ import json
 import requests
 from requests_oauthlib import OAuth1Session
 
-import config
+try:
+    import credentials
+except:
+    pass
 
 allModules = ["Attendance", "Curriculum", "Demographics", "Discipline", "District",
                 "Enrollment", "Family", "GraduationRequirements", "Gradebook", "Grading", "Guidance", "Health", "MessageCenter",
                 "OnlineForm", "Reporting", "Scheduling", "Security", "Staff", "StaffPlanning", "Student", "Transportation"]
 
+# This function checks the presence of necessary environmental variables before making API requests.
+def checkCredentials():
+
+    try:
+        os.environ["apiUrl"]
+    except:
+        raise Exception('os.environ["apiUrl"] must be set! Should be of the form "https://skyward.iscorp.com/...StuAPI"')
+
+    try:
+        os.environ["consumerKey"]
+    except:
+        raise Exception('os.environ["consumerKey"] must be set!')
+
+    try:
+        os.environ["consumerSecret"]
+    except:
+        raise Exception('os.environ["consumerSecret"] must be set!')
+
 # This function performs a QMLATIV API request.
 def makeRequest(endpoint, verb = 'get', params = None, payload = None):
     
-    sess = OAuth1Session(client_key = config.consumerKey, client_secret = config.consumerSecret)
+    checkCredentials()
     
-    requestUrl = config.apiUrl + endpoint
-
+    sess = OAuth1Session(client_key = os.environ["consumerKey"], client_secret = os.environ["consumerSecret"])
+    
+    requestUrl = os.environ["apiUrl"] + endpoint
     print(requestUrl)
-
     if verb == 'get':
         r = sess.get(requestUrl, params = params)
 
@@ -38,23 +59,6 @@ def makeRequest(endpoint, verb = 'get', params = None, payload = None):
     df = pd.read_json(json.dumps(r.json()), typ = 'Series')
     
     return(df)
-
-def getObjectNamesForModule(ModuleEndpoint):
-
-    ModuleEndpoint = '/'.join(['Generic', str(EntityID), Module])
-
-    ObjectNames = list(makeRequest(ModuleEndpoint).index)
-
-    return(ObjectNames)
-
-
-def testing():
-
-    for Module in allModules:
-
-        print(Module)
-
-
 
 # This function generates api request functions.
 def generateFunctions(EntityID = 1, Modules = allModules):

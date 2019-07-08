@@ -8,4 +8,11 @@ setup(name='pyqmlativ',
       author_email='samterfa@gmail.com',
       license='MIT',
       packages=['pyqmlativ'],
+      install_requires=[
+            'json',
+            'pandas',
+            'os',
+            'requests',
+            'requests_oauthlib',
+      ],
       zip_safe=False)
