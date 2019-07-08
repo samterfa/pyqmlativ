@@ -1,5 +1,3 @@
 from .utilities import *
 
-from .Student import *
-
-from .Attendance import *
+import pyqmlativ.Attendance

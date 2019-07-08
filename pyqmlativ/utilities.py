@@ -5,8 +5,6 @@ import json
 import requests
 from requests_oauthlib import OAuth1Session
 
-import atexit
-
 try:
     import credentials
 except:
@@ -42,7 +40,7 @@ def makeRequest(endpoint, verb = 'get', params = None, payload = None):
     sess = OAuth1Session(client_key = os.environ["consumerKey"], client_secret = os.environ["consumerSecret"])
     
     requestUrl = os.environ["apiUrl"] + endpoint
-    print(requestUrl)
+    
     if verb == 'get':
         r = sess.get(requestUrl, params = params)
 
@@ -65,21 +63,22 @@ def makeRequest(endpoint, verb = 'get', params = None, payload = None):
 # This function generates api request functions.
 def generateFunctions(EntityID = 1, Modules = allModules):
     
+    # Open ini file to make sure newly created functions are imported.
+    iniFilePath = 'pyqmlativ/__init__.py'
+    iniFile = open(iniFilePath, "w")
+    iniFile.write('from .utilities import *')
+
     for Module in Modules:
         
-        # Open ini file to make sure newly created functions are imported.
-        iniFilePath = 'pyqmlativ/__init__.py'
-        iniFile = open(iniFilePath, "a")
-        iniFile.write('\n\nfrom .' + Module + ' import *')
-        iniFile.close()
+        print('\n\nGenerating ' + Module + ' functions. ', end = '\n\n')
 
+        iniFile.write('\n\nimport pyqmlativ.' + Module)
+        
         # Create Module as a Python module.
         ModuleFilePath = 'pyqmlativ/' + Module + '.py'
         ModuleFile = open(ModuleFilePath, "w")
-
-        ModuleFile.write('Testing!\n')
-
-        continue
+        ModuleFile.write('# This module contains ' + Module + ' functions.')
+        ModuleFile = open(ModuleFilePath, "a")
 
         ModuleEndpoint = '/'.join(['', 'Generic', str(EntityID), Module])
 
@@ -90,11 +89,27 @@ def generateFunctions(EntityID = 1, Modules = allModules):
 
         for i in range(0, len(ObjectsAndEndpoints)):
 
+            print(str(i+1) + '/' + str(len(ObjectEndpoints)), end='\r', flush=True)
+
             Object = ObjectsAndEndpoints.index[i]
             ObjectEndpoint = ObjectsAndEndpoints[i]['href']
 
             fields = makeRequest(ObjectEndpoint)
-
-            return(fields)
         
+            idFieldIndex = [ 'PrimaryKey' in item for item in fields ].index(True)
+            idField = list(fields.keys())[idFieldIndex]
+
+            #### Create human-readable function names.
+            
+            # deleteObject()
+            functionName = 'delete' + Object
+
+            ModuleFile.write('\n\ndef ' + functionName + '(' + idField + ', EntityID = 1):')
+            ModuleFile.write('\n\n\tmakeRequest(endpoint = "' + ObjectEndpoint.replace('/1/', '/" + EntityID + "/') + '/" + ' + idField + ', verb = "delete")')
+
+        return()
         ModuleFile.close()
+
+    iniFile.close()
+        
+    return()
