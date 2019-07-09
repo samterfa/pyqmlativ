@@ -1,129 +1,129 @@
 # This module contains Curriculum functions.
 
-def deleteAcademicStandard(AcademicStandardID, EntityID = 1):
+def deleteAcademicStandard(AcademicStandardID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/AcademicStandard/" + AcademicStandardID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/AcademicStandard/" + AcademicStandardID, verb = "delete")
 
-def deleteAcademicStandardDefault(AcademicStandardDefaultID, EntityID = 1):
+def deleteAcademicStandardDefault(AcademicStandardDefaultID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/AcademicStandardDefault/" + AcademicStandardDefaultID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/AcademicStandardDefault/" + AcademicStandardDefaultID, verb = "delete")
 
-def deleteAcademicStandardGradeRange(AcademicStandardGradeRangeID, EntityID = 1):
+def deleteAcademicStandardGradeRange(AcademicStandardGradeRangeID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/AcademicStandardGradeRange/" + AcademicStandardGradeRangeID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/AcademicStandardGradeRange/" + AcademicStandardGradeRangeID, verb = "delete")
 
-def deleteAcademicStandardGradeRangeDefault(AcademicStandardGradeRangeDefaultID, EntityID = 1):
+def deleteAcademicStandardGradeRangeDefault(AcademicStandardGradeRangeDefaultID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/AcademicStandardGradeRangeDefault/" + AcademicStandardGradeRangeDefaultID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/AcademicStandardGradeRangeDefault/" + AcademicStandardGradeRangeDefaultID, verb = "delete")
 
-def deleteAcademicStandardHierarchyDepth(AcademicStandardHierarchyDepthID, EntityID = 1):
+def deleteAcademicStandardHierarchyDepth(AcademicStandardHierarchyDepthID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/AcademicStandardHierarchyDepth/" + AcademicStandardHierarchyDepthID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/AcademicStandardHierarchyDepth/" + AcademicStandardHierarchyDepthID, verb = "delete")
 
-def deleteAcademicStandardSet(AcademicStandardSetID, EntityID = 1):
+def deleteAcademicStandardSet(AcademicStandardSetID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/AcademicStandardSet/" + AcademicStandardSetID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/AcademicStandardSet/" + AcademicStandardSetID, verb = "delete")
 
-def deleteAcademicStandardSetDefault(AcademicStandardSetDefaultID, EntityID = 1):
+def deleteAcademicStandardSetDefault(AcademicStandardSetDefaultID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/AcademicStandardSetDefault/" + AcademicStandardSetDefaultID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/AcademicStandardSetDefault/" + AcademicStandardSetDefaultID, verb = "delete")
 
-def deleteAcademicStandardSubject(AcademicStandardSubjectID, EntityID = 1):
+def deleteAcademicStandardSubject(AcademicStandardSubjectID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/AcademicStandardSubject/" + AcademicStandardSubjectID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/AcademicStandardSubject/" + AcademicStandardSubjectID, verb = "delete")
 
-def deleteAcademicStandardSubjectDefault(AcademicStandardSubjectDefaultID, EntityID = 1):
+def deleteAcademicStandardSubjectDefault(AcademicStandardSubjectDefaultID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/AcademicStandardSubjectDefault/" + AcademicStandardSubjectDefaultID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/AcademicStandardSubjectDefault/" + AcademicStandardSubjectDefaultID, verb = "delete")
 
-def deleteAssessmentToolMN(AssessmentToolMNID, EntityID = 1):
+def deleteAssessmentToolMN(AssessmentToolMNID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/AssessmentToolMN/" + AssessmentToolMNID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/AssessmentToolMN/" + AssessmentToolMNID, verb = "delete")
 
-def deleteCurriculum(CurriculumID, EntityID = 1):
+def deleteCurriculum(CurriculumID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/Curriculum/" + CurriculumID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/Curriculum/" + CurriculumID, verb = "delete")
 
-def deleteCurriculumAcademicStandard(CurriculumAcademicStandardID, EntityID = 1):
+def deleteCurriculumAcademicStandard(CurriculumAcademicStandardID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/CurriculumAcademicStandard/" + CurriculumAcademicStandardID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/CurriculumAcademicStandard/" + CurriculumAcademicStandardID, verb = "delete")
 
-def deleteCurriculumCustomRequirement(CurriculumCustomRequirementID, EntityID = 1):
+def deleteCurriculumCustomRequirement(CurriculumCustomRequirementID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/CurriculumCustomRequirement/" + CurriculumCustomRequirementID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/CurriculumCustomRequirement/" + CurriculumCustomRequirementID, verb = "delete")
 
-def deleteCurriculumGradeLevel(CurriculumGradeLevelID, EntityID = 1):
+def deleteCurriculumGradeLevel(CurriculumGradeLevelID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/CurriculumGradeLevel/" + CurriculumGradeLevelID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/CurriculumGradeLevel/" + CurriculumGradeLevelID, verb = "delete")
 
-def deleteCurriculumProgramMN(CurriculumProgramMNID, EntityID = 1):
+def deleteCurriculumProgramMN(CurriculumProgramMNID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/CurriculumProgramMN/" + CurriculumProgramMNID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/CurriculumProgramMN/" + CurriculumProgramMNID, verb = "delete")
 
-def deleteCurriculumSubject(CurriculumSubjectID, EntityID = 1):
+def deleteCurriculumSubject(CurriculumSubjectID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/CurriculumSubject/" + CurriculumSubjectID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/CurriculumSubject/" + CurriculumSubjectID, verb = "delete")
 
-def deleteCurriculumSubjectAcademicStandard(CurriculumSubjectAcademicStandardID, EntityID = 1):
+def deleteCurriculumSubjectAcademicStandard(CurriculumSubjectAcademicStandardID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/CurriculumSubjectAcademicStandard/" + CurriculumSubjectAcademicStandardID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/CurriculumSubjectAcademicStandard/" + CurriculumSubjectAcademicStandardID, verb = "delete")
 
-def deleteCurriculumYear(CurriculumYearID, EntityID = 1):
+def deleteCurriculumYear(CurriculumYearID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/CurriculumYear/" + CurriculumYearID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/CurriculumYear/" + CurriculumYearID, verb = "delete")
 
-def deleteEarlyEducationInstructionalApproachMN(EarlyEducationInstructionalApproachMNID, EntityID = 1):
+def deleteEarlyEducationInstructionalApproachMN(EarlyEducationInstructionalApproachMNID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/EarlyEducationInstructionalApproachMN/" + EarlyEducationInstructionalApproachMNID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/EarlyEducationInstructionalApproachMN/" + EarlyEducationInstructionalApproachMNID, verb = "delete")
 
-def deleteEarlyEducationProgramMN(EarlyEducationProgramMNID, EntityID = 1):
+def deleteEarlyEducationProgramMN(EarlyEducationProgramMNID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/EarlyEducationProgramMN/" + EarlyEducationProgramMNID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/EarlyEducationProgramMN/" + EarlyEducationProgramMNID, verb = "delete")
 
-def deleteHierarchyDepth(HierarchyDepthID, EntityID = 1):
+def deleteHierarchyDepth(HierarchyDepthID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/HierarchyDepth/" + HierarchyDepthID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/HierarchyDepth/" + HierarchyDepthID, verb = "delete")
 
-def deletePrerequisite(PrerequisiteID, EntityID = 1):
+def deletePrerequisite(PrerequisiteID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/Prerequisite/" + PrerequisiteID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/Prerequisite/" + PrerequisiteID, verb = "delete")
 
-def deletePrerequisiteCurriculum(PrerequisiteCurriculumID, EntityID = 1):
+def deletePrerequisiteCurriculum(PrerequisiteCurriculumID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/PrerequisiteCurriculum/" + PrerequisiteCurriculumID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/PrerequisiteCurriculum/" + PrerequisiteCurriculumID, verb = "delete")
 
-def deleteSiteBasedInitiativeMN(SiteBasedInitiativeMNID, EntityID = 1):
+def deleteSiteBasedInitiativeMN(SiteBasedInitiativeMNID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/SiteBasedInitiativeMN/" + SiteBasedInitiativeMNID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/SiteBasedInitiativeMN/" + SiteBasedInitiativeMNID, verb = "delete")
 
-def deleteStandardPlacementMN(StandardPlacementMNID, EntityID = 1):
+def deleteStandardPlacementMN(StandardPlacementMNID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/StandardPlacementMN/" + StandardPlacementMNID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/StandardPlacementMN/" + StandardPlacementMNID, verb = "delete")
 
-def deleteSubject(SubjectID, EntityID = 1):
+def deleteSubject(SubjectID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/Subject/" + SubjectID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/Subject/" + SubjectID, verb = "delete")
 
-def deleteTempAcademicStandard(TempAcademicStandardID, EntityID = 1):
+def deleteTempAcademicStandard(TempAcademicStandardID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/TempAcademicStandard/" + TempAcademicStandardID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/TempAcademicStandard/" + TempAcademicStandardID, verb = "delete")
 
-def deleteTempAcademicStandardGradeRange(TempAcademicStandardGradeRangeID, EntityID = 1):
+def deleteTempAcademicStandardGradeRange(TempAcademicStandardGradeRangeID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/TempAcademicStandardGradeRange/" + TempAcademicStandardGradeRangeID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/TempAcademicStandardGradeRange/" + TempAcademicStandardGradeRangeID, verb = "delete")
 
-def deleteTempAcademicStandardSet(TempAcademicStandardSetID, EntityID = 1):
+def deleteTempAcademicStandardSet(TempAcademicStandardSetID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/TempAcademicStandardSet/" + TempAcademicStandardSetID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/TempAcademicStandardSet/" + TempAcademicStandardSetID, verb = "delete")
 
-def deleteTempAcademicStandardSubject(TempAcademicStandardSubjectID, EntityID = 1):
+def deleteTempAcademicStandardSubject(TempAcademicStandardSubjectID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/TempAcademicStandardSubject/" + TempAcademicStandardSubjectID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/TempAcademicStandardSubject/" + TempAcademicStandardSubjectID, verb = "delete")
 
-def deleteTempGradeRangeCopyResult(TempGradeRangeCopyResultID, EntityID = 1):
+def deleteTempGradeRangeCopyResult(TempGradeRangeCopyResultID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/TempGradeRangeCopyResult/" + TempGradeRangeCopyResultID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/TempGradeRangeCopyResult/" + TempGradeRangeCopyResultID, verb = "delete")
 
-def deleteTempHierarchyDepth(TempHierarchyDepthID, EntityID = 1):
+def deleteTempHierarchyDepth(TempHierarchyDepthID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Curriculum/TempHierarchyDepth/" + TempHierarchyDepthID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Curriculum/TempHierarchyDepth/" + TempHierarchyDepthID, verb = "delete")

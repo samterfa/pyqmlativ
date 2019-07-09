@@ -1,145 +1,145 @@
 # This module contains Discipline functions.
 
-def deleteActionAttendanceType(ActionAttendanceTypeID, EntityID = 1):
+def deleteActionAttendanceType(ActionAttendanceTypeID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/ActionAttendanceType/" + ActionAttendanceTypeID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/ActionAttendanceType/" + ActionAttendanceTypeID, verb = "delete")
 
-def deleteAction(ActionID, EntityID = 1):
+def deleteAction(ActionID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/Action/" + ActionID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/Action/" + ActionID, verb = "delete")
 
-def deleteActionType(ActionTypeID, EntityID = 1):
+def deleteActionType(ActionTypeID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/ActionType/" + ActionTypeID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/ActionType/" + ActionTypeID, verb = "delete")
 
-def deleteConfigDistrictYear(ConfigDistrictYearID, EntityID = 1):
+def deleteConfigDistrictYear(ConfigDistrictYearID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/ConfigDistrictYear/" + ConfigDistrictYearID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/ConfigDistrictYear/" + ConfigDistrictYearID, verb = "delete")
 
-def deleteConfigEntityGroupYear(ConfigEntityGroupYearID, EntityID = 1):
+def deleteConfigEntityGroupYear(ConfigEntityGroupYearID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/ConfigEntityGroupYear/" + ConfigEntityGroupYearID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/ConfigEntityGroupYear/" + ConfigEntityGroupYearID, verb = "delete")
 
-def deleteConfigEntityYear(ConfigEntityYearID, EntityID = 1):
+def deleteConfigEntityYear(ConfigEntityYearID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/ConfigEntityYear/" + ConfigEntityYearID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/ConfigEntityYear/" + ConfigEntityYearID, verb = "delete")
 
-def deleteConfigSystem(ConfigSystemID, EntityID = 1):
+def deleteConfigSystem(ConfigSystemID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/ConfigSystem/" + ConfigSystemID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/ConfigSystem/" + ConfigSystemID, verb = "delete")
 
-def deleteDisciplineLetterRunHistory(DisciplineLetterRunHistoryID, EntityID = 1):
+def deleteDisciplineLetterRunHistory(DisciplineLetterRunHistoryID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/DisciplineLetterRunHistory/" + DisciplineLetterRunHistoryID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/DisciplineLetterRunHistory/" + DisciplineLetterRunHistoryID, verb = "delete")
 
-def deleteDisciplineLetterRunHistoryAction(DisciplineLetterRunHistoryActionID, EntityID = 1):
+def deleteDisciplineLetterRunHistoryAction(DisciplineLetterRunHistoryActionID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/DisciplineLetterRunHistoryAction/" + DisciplineLetterRunHistoryActionID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/DisciplineLetterRunHistoryAction/" + DisciplineLetterRunHistoryActionID, verb = "delete")
 
-def deleteDisciplineLetterRunHistoryOffense(DisciplineLetterRunHistoryOffenseID, EntityID = 1):
+def deleteDisciplineLetterRunHistoryOffense(DisciplineLetterRunHistoryOffenseID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/DisciplineLetterRunHistoryOffense/" + DisciplineLetterRunHistoryOffenseID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/DisciplineLetterRunHistoryOffense/" + DisciplineLetterRunHistoryOffenseID, verb = "delete")
 
-def deleteDisciplineLetterTemplate(DisciplineLetterTemplateID, EntityID = 1):
+def deleteDisciplineLetterTemplate(DisciplineLetterTemplateID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/DisciplineLetterTemplate/" + DisciplineLetterTemplateID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/DisciplineLetterTemplate/" + DisciplineLetterTemplateID, verb = "delete")
 
-def deleteDisciplineLetterTemplateEntity(DisciplineLetterTemplateEntityID, EntityID = 1):
+def deleteDisciplineLetterTemplateEntity(DisciplineLetterTemplateEntityID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/DisciplineLetterTemplateEntity/" + DisciplineLetterTemplateEntityID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/DisciplineLetterTemplateEntity/" + DisciplineLetterTemplateEntityID, verb = "delete")
 
-def deleteDisciplineLetterTemplateField(DisciplineLetterTemplateFieldID, EntityID = 1):
+def deleteDisciplineLetterTemplateField(DisciplineLetterTemplateFieldID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/DisciplineLetterTemplateField/" + DisciplineLetterTemplateFieldID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/DisciplineLetterTemplateField/" + DisciplineLetterTemplateFieldID, verb = "delete")
 
-def deleteDisciplineLetterTemplateHeaderColumn(DisciplineLetterTemplateHeaderColumnID, EntityID = 1):
+def deleteDisciplineLetterTemplateHeaderColumn(DisciplineLetterTemplateHeaderColumnID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/DisciplineLetterTemplateHeaderColumn/" + DisciplineLetterTemplateHeaderColumnID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/DisciplineLetterTemplateHeaderColumn/" + DisciplineLetterTemplateHeaderColumnID, verb = "delete")
 
-def deleteDisciplineLetterTemplateHeaderRow(DisciplineLetterTemplateHeaderRowID, EntityID = 1):
+def deleteDisciplineLetterTemplateHeaderRow(DisciplineLetterTemplateHeaderRowID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/DisciplineLetterTemplateHeaderRow/" + DisciplineLetterTemplateHeaderRowID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/DisciplineLetterTemplateHeaderRow/" + DisciplineLetterTemplateHeaderRowID, verb = "delete")
 
-def deleteDrug(DrugID, EntityID = 1):
+def deleteDrug(DrugID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/Drug/" + DrugID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/Drug/" + DrugID, verb = "delete")
 
-def deleteIncident(IncidentID, EntityID = 1):
+def deleteIncident(IncidentID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/Incident/" + IncidentID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/Incident/" + IncidentID, verb = "delete")
 
-def deleteIncidentOffense(IncidentOffenseID, EntityID = 1):
+def deleteIncidentOffense(IncidentOffenseID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/IncidentOffense/" + IncidentOffenseID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/IncidentOffense/" + IncidentOffenseID, verb = "delete")
 
-def deleteIncidentOffenseNameActionDetail(IncidentOffenseNameActionDetailID, EntityID = 1):
+def deleteIncidentOffenseNameActionDetail(IncidentOffenseNameActionDetailID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/IncidentOffenseNameActionDetail/" + IncidentOffenseNameActionDetailID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/IncidentOffenseNameActionDetail/" + IncidentOffenseNameActionDetailID, verb = "delete")
 
-def deleteIncidentOffenseNameActionDetailPeriod(IncidentOffenseNameActionDetailPeriodID, EntityID = 1):
+def deleteIncidentOffenseNameActionDetailPeriod(IncidentOffenseNameActionDetailPeriodID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/IncidentOffenseNameActionDetailPeriod/" + IncidentOffenseNameActionDetailPeriodID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/IncidentOffenseNameActionDetailPeriod/" + IncidentOffenseNameActionDetailPeriodID, verb = "delete")
 
-def deleteIncidentOffenseNameAction(IncidentOffenseNameActionID, EntityID = 1):
+def deleteIncidentOffenseNameAction(IncidentOffenseNameActionID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/IncidentOffenseNameAction/" + IncidentOffenseNameActionID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/IncidentOffenseNameAction/" + IncidentOffenseNameActionID, verb = "delete")
 
-def deleteIncidentOffenseNameDrug(IncidentOffenseNameDrugID, EntityID = 1):
+def deleteIncidentOffenseNameDrug(IncidentOffenseNameDrugID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/IncidentOffenseNameDrug/" + IncidentOffenseNameDrugID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/IncidentOffenseNameDrug/" + IncidentOffenseNameDrugID, verb = "delete")
 
-def deleteIncidentOffenseName(IncidentOffenseNameID, EntityID = 1):
+def deleteIncidentOffenseName(IncidentOffenseNameID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/IncidentOffenseName/" + IncidentOffenseNameID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/IncidentOffenseName/" + IncidentOffenseNameID, verb = "delete")
 
-def deleteIncidentOffenseNameReportRunHistory(IncidentOffenseNameReportRunHistoryID, EntityID = 1):
+def deleteIncidentOffenseNameReportRunHistory(IncidentOffenseNameReportRunHistoryID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/IncidentOffenseNameReportRunHistory/" + IncidentOffenseNameReportRunHistoryID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/IncidentOffenseNameReportRunHistory/" + IncidentOffenseNameReportRunHistoryID, verb = "delete")
 
-def deleteIncidentOffenseNameWeapon(IncidentOffenseNameWeaponID, EntityID = 1):
+def deleteIncidentOffenseNameWeapon(IncidentOffenseNameWeaponID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/IncidentOffenseNameWeapon/" + IncidentOffenseNameWeaponID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/IncidentOffenseNameWeapon/" + IncidentOffenseNameWeaponID, verb = "delete")
 
-def deleteLocation(LocationID, EntityID = 1):
+def deleteLocation(LocationID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/Location/" + LocationID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/Location/" + LocationID, verb = "delete")
 
-def deleteNextIncidentNumber(NextIncidentNumberID, EntityID = 1):
+def deleteNextIncidentNumber(NextIncidentNumberID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/NextIncidentNumber/" + NextIncidentNumberID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/NextIncidentNumber/" + NextIncidentNumberID, verb = "delete")
 
-def deleteOffense(OffenseID, EntityID = 1):
+def deleteOffense(OffenseID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/Offense/" + OffenseID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/Offense/" + OffenseID, verb = "delete")
 
-def deleteOffenseAction(OffenseActionID, EntityID = 1):
+def deleteOffenseAction(OffenseActionID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/OffenseAction/" + OffenseActionID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/OffenseAction/" + OffenseActionID, verb = "delete")
 
-def deleteOffenseLevel(OffenseLevelID, EntityID = 1):
+def deleteOffenseLevel(OffenseLevelID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/OffenseLevel/" + OffenseLevelID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/OffenseLevel/" + OffenseLevelID, verb = "delete")
 
-def deletePerceivedMotivation(PerceivedMotivationID, EntityID = 1):
+def deletePerceivedMotivation(PerceivedMotivationID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/PerceivedMotivation/" + PerceivedMotivationID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/PerceivedMotivation/" + PerceivedMotivationID, verb = "delete")
 
-def deleteTempIncidentOffenseNameAction(TempIncidentOffenseNameActionID, EntityID = 1):
+def deleteTempIncidentOffenseNameAction(TempIncidentOffenseNameActionID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/TempIncidentOffenseNameAction/" + TempIncidentOffenseNameActionID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/TempIncidentOffenseNameAction/" + TempIncidentOffenseNameActionID, verb = "delete")
 
-def deleteTempIncidentOffenseNameActionDetail(TempIncidentOffenseNameActionDetailID, EntityID = 1):
+def deleteTempIncidentOffenseNameActionDetail(TempIncidentOffenseNameActionDetailID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/TempIncidentOffenseNameActionDetail/" + TempIncidentOffenseNameActionDetailID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/TempIncidentOffenseNameActionDetail/" + TempIncidentOffenseNameActionDetailID, verb = "delete")
 
-def deleteTempIncidentOffenseNameActionDetailRecord(TempIncidentOffenseNameActionDetailRecordID, EntityID = 1):
+def deleteTempIncidentOffenseNameActionDetailRecord(TempIncidentOffenseNameActionDetailRecordID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/TempIncidentOffenseNameActionDetailRecord/" + TempIncidentOffenseNameActionDetailRecordID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/TempIncidentOffenseNameActionDetailRecord/" + TempIncidentOffenseNameActionDetailRecordID, verb = "delete")
 
-def deleteTempIncidentOffenseNameReportRunHistoryRecord(TempIncidentOffenseNameReportRunHistoryRecordID, EntityID = 1):
+def deleteTempIncidentOffenseNameReportRunHistoryRecord(TempIncidentOffenseNameReportRunHistoryRecordID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/TempIncidentOffenseNameReportRunHistoryRecord/" + TempIncidentOffenseNameReportRunHistoryRecordID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/TempIncidentOffenseNameReportRunHistoryRecord/" + TempIncidentOffenseNameReportRunHistoryRecordID, verb = "delete")
 
-def deleteWeapon(WeaponID, EntityID = 1):
+def deleteWeapon(WeaponID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Discipline/Weapon/" + WeaponID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Discipline/Weapon/" + WeaponID, verb = "delete")

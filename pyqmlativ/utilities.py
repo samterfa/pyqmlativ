@@ -10,9 +10,15 @@ try:
 except:
     pass
 
-all_modules = ["attendance", "curriculum", "demographics", "discipline", "district",
-                "enrollment", "family", "graduationRequirements", "gradebook", "grading", "guidance", "health", "messageCenter",
-                "onlineForm", "seporting", "scheduling", "security", "staff", "staffPlanning", "student", "transportation"]
+all_modules = pd.DataFrame(
+                            {'module_name' : ["Attendance", "Curriculum", "Demographics", "Discipline", "District",
+                                        "Enrollment", "Family", "GraduationRequirements", "Gradebook", "Grading", "Guidance", "Health", "MessageCenter",
+                                        "OnlineForm", "Reporting", "Scheduling", "Security", "Staff", "StaffPlanning", "Student", "Transportation"],
+                            'module_var_name' : ["attendance", "curriculum", "demographics", "discipline", "district",
+                                        "enrollment", "family", "graduation_requirements", "gradebook", "grading", "guidance", "health", "message_center",
+                                        "online_form", "reporting", "scheduling", "security", "staff", "staff_planning", "student", "transportation"]
+                            }
+                            )
 
 # This function checks the presence of necessary environmental variables before making API requests.
 def checkCredentials():
@@ -33,7 +39,7 @@ def checkCredentials():
         raise Exception('os.environ["consumer_secret"] must be set!')
 
 # This function performs a QMLATIV API request.
-def makeRequest(endpoint, verb = 'get', params = None, payload = None):
+def make_request(endpoint, verb = 'get', params = None, payload = None):
     
     checkCredentials()
     
@@ -61,53 +67,53 @@ def makeRequest(endpoint, verb = 'get', params = None, payload = None):
     return(df)
 
 # This function generates api request functions.
-def generateFunctions(EntityID = 1, Modules = all_modules):
+def generateFunctions(entity_id = 1, modules = all_modules.module_name):
     
     # Open ini file to make sure newly created functions are imported.
     ini_file_path = 'pyqmlativ/__init__.py'
     ini_file = open(ini_file_path, "w")
     ini_file.write('from .utilities import *')
 
-    for Module in Modules:
+    for module_name in modules:
         
-        print('\n\nGenerating ' + Module + ' functions. ', end = '\n\n')
+        print('\n\nGenerating ' + module_name + ' functions. ', end = '\n\n')
 
-        ini_file.write('\n\nimport pyqmlativ.' + Module)
+        ini_file.write('\n\nimport pyqmlativ.' + module_name)
         
-        # Create Module as a Python module.
-        module_file_path = 'pyqmlativ/' + Module + '.py'
+        # Create module as a Python module.
+        module_file_path = 'pyqmlativ/' + module_name + '.py'
         module_file = open(module_file_path, "w")
-        module_file.write('# This module contains ' + Module + ' functions.')
+        module_file.write('# This module contains ' + module_name + ' functions.')
         module_file = open(module_file_path, "a")
 
-        module_endpoint = '/'.join(['', 'Generic', str(EntityID), Module])
+        module_endpoint = '/'.join(['', 'Generic', str(entity_id), module_name])
 
-        objects_and_endpoints = makeRequest(module_endpoint)
+        objects_and_endpoints = make_request(module_endpoint)
         
-        Objects = list(objects_and_endpoints.index)
+        objects = list(objects_and_endpoints.index)
         object_endpoints = [ item['href'] for item in objects_and_endpoints ]
 
         for i in range(0, len(objects_and_endpoints)):
 
             print(str(i+1) + '/' + str(len(object_endpoints)), end='\r', flush=True)
 
-            Object = objects_and_endpoints.index[i]
+            object_name = objects_and_endpoints.index[i]
             object_endpoint = objects_and_endpoints[i]['href']
 
-            fields = makeRequest(object_endpoint)
+            fields = make_request(object_endpoint)
         
             id_field_index = [ 'PrimaryKey' in item for item in fields ].index(True)
             idField = list(fields.keys())[id_field_index]
 
             #### Create human-readable function names.
             
-            # deleteObject()
-            functionName = 'delete' + Object
+            # deleteobject()
+            functionName = 'delete' + object_name
 
-            module_file.write('\n\ndef ' + functionName + '(' + idField + ', EntityID = 1):')
-            module_file.write('\n\n\tmakeRequest(endpoint = "' + object_endpoint.replace('/1/', '/" + EntityID + "/') + '/" + ' + idField + ', verb = "delete")')
+            module_file.write('\n\ndef ' + functionName + '(' + idField + ', entity_id = 1):')
+            module_file.write('\n\n\tmake_request(endpoint = "' + object_endpoint.replace('/1/', '/" + entity_id + "/') + '/" + ' + idField + ', verb = "delete")')
 
-        return()
+            #return()
         module_file.close()
 
     ini_file.close()

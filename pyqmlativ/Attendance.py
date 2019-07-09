@@ -1,225 +1,225 @@
 # This module contains Attendance functions.
 
-def deleteAttendancePeriod(AttendancePeriodID, EntityID = 1):
+def deleteAttendancePeriod(AttendancePeriodID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/AttendancePeriod/" + AttendancePeriodID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/AttendancePeriod/" + AttendancePeriodID, verb = "delete")
 
-def deleteAttendancePeriodConfigEntityGroupYear(AttendancePeriodConfigEntityGroupYearID, EntityID = 1):
+def deleteAttendancePeriodConfigEntityGroupYear(AttendancePeriodConfigEntityGroupYearID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/AttendancePeriodConfigEntityGroupYear/" + AttendancePeriodConfigEntityGroupYearID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/AttendancePeriodConfigEntityGroupYear/" + AttendancePeriodConfigEntityGroupYearID, verb = "delete")
 
-def deleteAttendanceReason(AttendanceReasonID, EntityID = 1):
+def deleteAttendanceReason(AttendanceReasonID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/AttendanceReason/" + AttendanceReasonID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/AttendanceReason/" + AttendanceReasonID, verb = "delete")
 
-def deleteAttendanceReportRunHistory(AttendanceReportRunHistoryID, EntityID = 1):
+def deleteAttendanceReportRunHistory(AttendanceReportRunHistoryID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/AttendanceReportRunHistory/" + AttendanceReportRunHistoryID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/AttendanceReportRunHistory/" + AttendanceReportRunHistoryID, verb = "delete")
 
-def deleteAttendanceReportRunHistoryThresholdResetRange(AttendanceReportRunHistoryThresholdResetRangeID, EntityID = 1):
+def deleteAttendanceReportRunHistoryThresholdResetRange(AttendanceReportRunHistoryThresholdResetRangeID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/AttendanceReportRunHistoryThresholdResetRange/" + AttendanceReportRunHistoryThresholdResetRangeID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/AttendanceReportRunHistoryThresholdResetRange/" + AttendanceReportRunHistoryThresholdResetRangeID, verb = "delete")
 
-def deleteAttendanceTerm(AttendanceTermID, EntityID = 1):
+def deleteAttendanceTerm(AttendanceTermID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/AttendanceTerm/" + AttendanceTermID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/AttendanceTerm/" + AttendanceTermID, verb = "delete")
 
-def deleteAttendanceType(AttendanceTypeID, EntityID = 1):
+def deleteAttendanceType(AttendanceTypeID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/AttendanceType/" + AttendanceTypeID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/AttendanceType/" + AttendanceTypeID, verb = "delete")
 
-def deleteBellSchedule(BellScheduleID, EntityID = 1):
+def deleteBellSchedule(BellScheduleID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/BellSchedule/" + BellScheduleID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/BellSchedule/" + BellScheduleID, verb = "delete")
 
-def deleteBellSchedulingPeriod(BellSchedulingPeriodID, EntityID = 1):
+def deleteBellSchedulingPeriod(BellSchedulingPeriodID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/BellSchedulingPeriod/" + BellSchedulingPeriodID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/BellSchedulingPeriod/" + BellSchedulingPeriodID, verb = "delete")
 
-def deleteCalendarDay(CalendarDayID, EntityID = 1):
+def deleteCalendarDay(CalendarDayID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/CalendarDay/" + CalendarDayID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/CalendarDay/" + CalendarDayID, verb = "delete")
 
-def deleteCalendarDayCalendarEvent(CalendarDayCalendarEventID, EntityID = 1):
+def deleteCalendarDayCalendarEvent(CalendarDayCalendarEventID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/CalendarDayCalendarEvent/" + CalendarDayCalendarEventID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/CalendarDayCalendarEvent/" + CalendarDayCalendarEventID, verb = "delete")
 
-def deleteCalendarDayDisplayPeriodOverride(CalendarDayDisplayPeriodOverrideID, EntityID = 1):
+def deleteCalendarDayDisplayPeriodOverride(CalendarDayDisplayPeriodOverrideID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/CalendarDayDisplayPeriodOverride/" + CalendarDayDisplayPeriodOverrideID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/CalendarDayDisplayPeriodOverride/" + CalendarDayDisplayPeriodOverrideID, verb = "delete")
 
-def deleteCalendarDaySchedulingPeriodTimesOverride(CalendarDaySchedulingPeriodTimesOverrideID, EntityID = 1):
+def deleteCalendarDaySchedulingPeriodTimesOverride(CalendarDaySchedulingPeriodTimesOverrideID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/CalendarDaySchedulingPeriodTimesOverride/" + CalendarDaySchedulingPeriodTimesOverrideID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/CalendarDaySchedulingPeriodTimesOverride/" + CalendarDaySchedulingPeriodTimesOverrideID, verb = "delete")
 
-def deleteCalendarDisplayPeriod(CalendarDisplayPeriodID, EntityID = 1):
+def deleteCalendarDisplayPeriod(CalendarDisplayPeriodID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/CalendarDisplayPeriod/" + CalendarDisplayPeriodID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/CalendarDisplayPeriod/" + CalendarDisplayPeriodID, verb = "delete")
 
-def deleteCalendarEvent(CalendarEventID, EntityID = 1):
+def deleteCalendarEvent(CalendarEventID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/CalendarEvent/" + CalendarEventID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/CalendarEvent/" + CalendarEventID, verb = "delete")
 
-def deleteCalendar(CalendarID, EntityID = 1):
+def deleteCalendar(CalendarID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/Calendar/" + CalendarID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/Calendar/" + CalendarID, verb = "delete")
 
-def deleteConfigEntityGroupYear(ConfigEntityGroupYearID, EntityID = 1):
+def deleteConfigEntityGroupYear(ConfigEntityGroupYearID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/ConfigEntityGroupYear/" + ConfigEntityGroupYearID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/ConfigEntityGroupYear/" + ConfigEntityGroupYearID, verb = "delete")
 
-def deleteCrossEntityAttendanceReason(CrossEntityAttendanceReasonID, EntityID = 1):
+def deleteCrossEntityAttendanceReason(CrossEntityAttendanceReasonID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/CrossEntityAttendanceReason/" + CrossEntityAttendanceReasonID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/CrossEntityAttendanceReason/" + CrossEntityAttendanceReasonID, verb = "delete")
 
-def deleteCrossEntityAttendanceType(CrossEntityAttendanceTypeID, EntityID = 1):
+def deleteCrossEntityAttendanceType(CrossEntityAttendanceTypeID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/CrossEntityAttendanceType/" + CrossEntityAttendanceTypeID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/CrossEntityAttendanceType/" + CrossEntityAttendanceTypeID, verb = "delete")
 
-def deleteCrossEntityCalendarDisplayPeriod(CrossEntityCalendarDisplayPeriodID, EntityID = 1):
+def deleteCrossEntityCalendarDisplayPeriod(CrossEntityCalendarDisplayPeriodID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/CrossEntityCalendarDisplayPeriod/" + CrossEntityCalendarDisplayPeriodID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/CrossEntityCalendarDisplayPeriod/" + CrossEntityCalendarDisplayPeriodID, verb = "delete")
 
-def deleteDailySectionAttendance(DailySectionAttendanceID, EntityID = 1):
+def deleteDailySectionAttendance(DailySectionAttendanceID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/DailySectionAttendance/" + DailySectionAttendanceID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/DailySectionAttendance/" + DailySectionAttendanceID, verb = "delete")
 
-def deleteDayRotationPattern(DayRotationPatternID, EntityID = 1):
+def deleteDayRotationPattern(DayRotationPatternID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/DayRotationPattern/" + DayRotationPatternID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/DayRotationPattern/" + DayRotationPatternID, verb = "delete")
 
-def deleteDisciplineThreshold(DisciplineThresholdID, EntityID = 1):
+def deleteDisciplineThreshold(DisciplineThresholdID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/DisciplineThreshold/" + DisciplineThresholdID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/DisciplineThreshold/" + DisciplineThresholdID, verb = "delete")
 
-def deleteDroppedStudentAttendancePeriod(DroppedStudentAttendancePeriodID, EntityID = 1):
+def deleteDroppedStudentAttendancePeriod(DroppedStudentAttendancePeriodID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/DroppedStudentAttendancePeriod/" + DroppedStudentAttendancePeriodID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/DroppedStudentAttendancePeriod/" + DroppedStudentAttendancePeriodID, verb = "delete")
 
-def deleteRecordedUnrecordedAttendance(MeetDisplayPeriodID, EntityID = 1):
+def deleteRecordedUnrecordedAttendance(MeetDisplayPeriodID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/RecordedUnrecordedAttendance/" + MeetDisplayPeriodID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/RecordedUnrecordedAttendance/" + MeetDisplayPeriodID, verb = "delete")
 
-def deleteRoomLayout(RoomLayoutID, EntityID = 1):
+def deleteRoomLayout(RoomLayoutID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/RoomLayout/" + RoomLayoutID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/RoomLayout/" + RoomLayoutID, verb = "delete")
 
-def deleteRoomLayoutObject(RoomLayoutObjectID, EntityID = 1):
+def deleteRoomLayoutObject(RoomLayoutObjectID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/RoomLayoutObject/" + RoomLayoutObjectID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/RoomLayoutObject/" + RoomLayoutObjectID, verb = "delete")
 
-def deleteRoomObject(RoomObjectID, EntityID = 1):
+def deleteRoomObject(RoomObjectID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/RoomObject/" + RoomObjectID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/RoomObject/" + RoomObjectID, verb = "delete")
 
-def deleteSeatingChart(SeatingChartID, EntityID = 1):
+def deleteSeatingChart(SeatingChartID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/SeatingChart/" + SeatingChartID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/SeatingChart/" + SeatingChartID, verb = "delete")
 
-def deleteSeatingChartMeet(SeatingChartMeetID, EntityID = 1):
+def deleteSeatingChartMeet(SeatingChartMeetID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/SeatingChartMeet/" + SeatingChartMeetID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/SeatingChartMeet/" + SeatingChartMeetID, verb = "delete")
 
-def deleteSeatingChartSeat(SeatingChartSeatID, EntityID = 1):
+def deleteSeatingChartSeat(SeatingChartSeatID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/SeatingChartSeat/" + SeatingChartSeatID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/SeatingChartSeat/" + SeatingChartSeatID, verb = "delete")
 
-def deleteSeatingChartUsedLast(SeatingChartUsedLastID, EntityID = 1):
+def deleteSeatingChartUsedLast(SeatingChartUsedLastID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/SeatingChartUsedLast/" + SeatingChartUsedLastID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/SeatingChartUsedLast/" + SeatingChartUsedLastID, verb = "delete")
 
-def deleteStaffMeetSetting(StaffMeetSettingID, EntityID = 1):
+def deleteStaffMeetSetting(StaffMeetSettingID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/StaffMeetSetting/" + StaffMeetSettingID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/StaffMeetSetting/" + StaffMeetSettingID, verb = "delete")
 
-def deleteStudentAttendance(StudentAttendanceID, EntityID = 1):
+def deleteStudentAttendance(StudentAttendanceID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/StudentAttendance/" + StudentAttendanceID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/StudentAttendance/" + StudentAttendanceID, verb = "delete")
 
-def deleteStudentAttendancePeriod(StudentAttendancePeriodID, EntityID = 1):
+def deleteStudentAttendancePeriod(StudentAttendancePeriodID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/StudentAttendancePeriod/" + StudentAttendancePeriodID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/StudentAttendancePeriod/" + StudentAttendancePeriodID, verb = "delete")
 
-def deleteStudentAttendancePeriodGroup(StudentAttendancePeriodID, EntityID = 1):
+def deleteStudentAttendancePeriodGroup(StudentAttendancePeriodID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/StudentAttendancePeriodGroup/" + StudentAttendancePeriodID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/StudentAttendancePeriodGroup/" + StudentAttendancePeriodID, verb = "delete")
 
-def deleteStudentAttendanceTerm(StudentID, EntityID = 1):
+def deleteStudentAttendanceTerm(StudentID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/StudentAttendanceTerm/" + StudentID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/StudentAttendanceTerm/" + StudentID, verb = "delete")
 
-def deleteStudentDisciplineThresholdAttendanceReportRunHistory(StudentDisciplineThresholdAttendanceReportRunHistoryID, EntityID = 1):
+def deleteStudentDisciplineThresholdAttendanceReportRunHistory(StudentDisciplineThresholdAttendanceReportRunHistoryID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/StudentDisciplineThresholdAttendanceReportRunHistory/" + StudentDisciplineThresholdAttendanceReportRunHistoryID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/StudentDisciplineThresholdAttendanceReportRunHistory/" + StudentDisciplineThresholdAttendanceReportRunHistoryID, verb = "delete")
 
-def deleteStudentInOutTime(StudentInOutTimeID, EntityID = 1):
+def deleteStudentInOutTime(StudentInOutTimeID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/StudentInOutTime/" + StudentInOutTimeID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/StudentInOutTime/" + StudentInOutTimeID, verb = "delete")
 
-def deleteStudentThresholdPeriod(StudentThresholdPeriodID, EntityID = 1):
+def deleteStudentThresholdPeriod(StudentThresholdPeriodID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/StudentThresholdPeriod/" + StudentThresholdPeriodID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/StudentThresholdPeriod/" + StudentThresholdPeriodID, verb = "delete")
 
-def deleteTeacherEntry(TeacherEntryID, EntityID = 1):
+def deleteTeacherEntry(TeacherEntryID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TeacherEntry/" + TeacherEntryID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TeacherEntry/" + TeacherEntryID, verb = "delete")
 
-def deleteTempAffectedCalendarDayRecord(TempAffectedCalendarDayRecordID, EntityID = 1):
+def deleteTempAffectedCalendarDayRecord(TempAffectedCalendarDayRecordID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempAffectedCalendarDayRecord/" + TempAffectedCalendarDayRecordID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempAffectedCalendarDayRecord/" + TempAffectedCalendarDayRecordID, verb = "delete")
 
-def deleteTempAffectedStudentAttendancePeriodRecord(TempAffectedStudentAttendancePeriodRecordID, EntityID = 1):
+def deleteTempAffectedStudentAttendancePeriodRecord(TempAffectedStudentAttendancePeriodRecordID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempAffectedStudentAttendancePeriodRecord/" + TempAffectedStudentAttendancePeriodRecordID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempAffectedStudentAttendancePeriodRecord/" + TempAffectedStudentAttendancePeriodRecordID, verb = "delete")
 
-def deleteTempAffectedStudentAttendanceRecord(TempAffectedStudentAttendanceRecordID, EntityID = 1):
+def deleteTempAffectedStudentAttendanceRecord(TempAffectedStudentAttendanceRecordID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempAffectedStudentAttendanceRecord/" + TempAffectedStudentAttendanceRecordID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempAffectedStudentAttendanceRecord/" + TempAffectedStudentAttendanceRecordID, verb = "delete")
 
-def deleteTempAttendanceTerm(TempAttendanceTermID, EntityID = 1):
+def deleteTempAttendanceTerm(TempAttendanceTermID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempAttendanceTerm/" + TempAttendanceTermID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempAttendanceTerm/" + TempAttendanceTermID, verb = "delete")
 
-def deleteTempCalendar(TempCalendarID, EntityID = 1):
+def deleteTempCalendar(TempCalendarID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempCalendar/" + TempCalendarID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempCalendar/" + TempCalendarID, verb = "delete")
 
-def deleteTempCalendarAttendanceTerm(TempCalendarAttendanceTermID, EntityID = 1):
+def deleteTempCalendarAttendanceTerm(TempCalendarAttendanceTermID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempCalendarAttendanceTerm/" + TempCalendarAttendanceTermID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempCalendarAttendanceTerm/" + TempCalendarAttendanceTermID, verb = "delete")
 
-def deleteTempCalendarDayCalendarEventRecord(TempCalendarDayCalendarEventRecordID, EntityID = 1):
+def deleteTempCalendarDayCalendarEventRecord(TempCalendarDayCalendarEventRecordID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempCalendarDayCalendarEventRecord/" + TempCalendarDayCalendarEventRecordID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempCalendarDayCalendarEventRecord/" + TempCalendarDayCalendarEventRecordID, verb = "delete")
 
-def deleteTempCloneCalendarError(TempCloneCalendarErrorID, EntityID = 1):
+def deleteTempCloneCalendarError(TempCloneCalendarErrorID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempCloneCalendarError/" + TempCloneCalendarErrorID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempCloneCalendarError/" + TempCloneCalendarErrorID, verb = "delete")
 
-def deleteTempCloneCalendarRecord(TempCloneCalendarRecordID, EntityID = 1):
+def deleteTempCloneCalendarRecord(TempCloneCalendarRecordID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempCloneCalendarRecord/" + TempCloneCalendarRecordID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempCloneCalendarRecord/" + TempCloneCalendarRecordID, verb = "delete")
 
-def deleteTempStudentAttendanceRecord(TempStudentAttendanceRecordID, EntityID = 1):
+def deleteTempStudentAttendanceRecord(TempStudentAttendanceRecordID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempStudentAttendanceRecord/" + TempStudentAttendanceRecordID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempStudentAttendanceRecord/" + TempStudentAttendanceRecordID, verb = "delete")
 
-def deleteTempStudentDisciplineThresholdAttendanceReportRunHistoryRecord(TempStudentDisciplineThresholdAttendanceReportRunHistoryRecordID, EntityID = 1):
+def deleteTempStudentDisciplineThresholdAttendanceReportRunHistoryRecord(TempStudentDisciplineThresholdAttendanceReportRunHistoryRecordID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempStudentDisciplineThresholdAttendanceReportRunHistoryRecord/" + TempStudentDisciplineThresholdAttendanceReportRunHistoryRecordID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempStudentDisciplineThresholdAttendanceReportRunHistoryRecord/" + TempStudentDisciplineThresholdAttendanceReportRunHistoryRecordID, verb = "delete")
 
-def deleteTempStudentThresholdPeriodRecord(TempStudentThresholdPeriodRecordID, EntityID = 1):
+def deleteTempStudentThresholdPeriodRecord(TempStudentThresholdPeriodRecordID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/TempStudentThresholdPeriodRecord/" + TempStudentThresholdPeriodRecordID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/TempStudentThresholdPeriodRecord/" + TempStudentThresholdPeriodRecordID, verb = "delete")
 
-def deleteThresholdResetRange(ThresholdResetRangeID, EntityID = 1):
+def deleteThresholdResetRange(ThresholdResetRangeID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/ThresholdResetRange/" + ThresholdResetRangeID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/ThresholdResetRange/" + ThresholdResetRangeID, verb = "delete")
 
-def deleteThresholdResetRangeAttendancePeriod(ThresholdResetRangeAttendancePeriodID, EntityID = 1):
+def deleteThresholdResetRangeAttendancePeriod(ThresholdResetRangeAttendancePeriodID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/ThresholdResetRangeAttendancePeriod/" + ThresholdResetRangeAttendancePeriodID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/ThresholdResetRangeAttendancePeriod/" + ThresholdResetRangeAttendancePeriodID, verb = "delete")
 
-def deleteThresholdResetRangeAttendanceType(ThresholdResetRangeAttendanceTypeID, EntityID = 1):
+def deleteThresholdResetRangeAttendanceType(ThresholdResetRangeAttendanceTypeID, entity_id = 1):
 
-	makeRequest(endpoint = "/Generic/" + EntityID + "/Attendance/ThresholdResetRangeAttendanceType/" + ThresholdResetRangeAttendanceTypeID, verb = "delete")
+	make_request(endpoint = "/Generic/" + entity_id + "/Attendance/ThresholdResetRangeAttendanceType/" + ThresholdResetRangeAttendanceTypeID, verb = "delete")
