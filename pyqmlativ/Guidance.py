@@ -1,37 +1,39 @@
 # This module contains Guidance functions.
 
-def deleteNotificationMethod(NotificationMethodID, entity_id = 1):
+from . import make_request
 
-	make_request(endpoint = "/Generic/" + entity_id + "/Guidance/NotificationMethod/" + NotificationMethodID, verb = "delete")
+def deleteNotificationMethod(NotificationMethodID, EntityID = 1):
 
-def deleteOfficeVisitComment(OfficeVisitCommentID, entity_id = 1):
+	make_request(endpoint = "/Generic/" + EntityID + "/Guidance/NotificationMethod/" + NotificationMethodID, verb = "delete")
 
-	make_request(endpoint = "/Generic/" + entity_id + "/Guidance/OfficeVisitComment/" + OfficeVisitCommentID, verb = "delete")
+def deleteOfficeVisitComment(OfficeVisitCommentID, EntityID = 1):
 
-def deleteOfficeVisitGuardianResponse(OfficeVisitGuardianResponseID, entity_id = 1):
+	make_request(endpoint = "/Generic/" + EntityID + "/Guidance/OfficeVisitComment/" + OfficeVisitCommentID, verb = "delete")
 
-	make_request(endpoint = "/Generic/" + entity_id + "/Guidance/OfficeVisitGuardianResponse/" + OfficeVisitGuardianResponseID, verb = "delete")
+def deleteOfficeVisitGuardianResponse(OfficeVisitGuardianResponseID, EntityID = 1):
 
-def deleteOfficeVisitReason(OfficeVisitReasonID, entity_id = 1):
+	make_request(endpoint = "/Generic/" + EntityID + "/Guidance/OfficeVisitGuardianResponse/" + OfficeVisitGuardianResponseID, verb = "delete")
 
-	make_request(endpoint = "/Generic/" + entity_id + "/Guidance/OfficeVisitReason/" + OfficeVisitReasonID, verb = "delete")
+def deleteOfficeVisitReason(OfficeVisitReasonID, EntityID = 1):
 
-def deleteStudentOfficeVisit(StudentOfficeVisitID, entity_id = 1):
+	make_request(endpoint = "/Generic/" + EntityID + "/Guidance/OfficeVisitReason/" + OfficeVisitReasonID, verb = "delete")
 
-	make_request(endpoint = "/Generic/" + entity_id + "/Guidance/StudentOfficeVisit/" + StudentOfficeVisitID, verb = "delete")
+def deleteStudentOfficeVisit(StudentOfficeVisitID, EntityID = 1):
 
-def deleteStudentOfficeVisitNote(StudentOfficeVisitNoteID, entity_id = 1):
+	make_request(endpoint = "/Generic/" + EntityID + "/Guidance/StudentOfficeVisit/" + StudentOfficeVisitID, verb = "delete")
 
-	make_request(endpoint = "/Generic/" + entity_id + "/Guidance/StudentOfficeVisitNote/" + StudentOfficeVisitNoteID, verb = "delete")
+def deleteStudentOfficeVisitNote(StudentOfficeVisitNoteID, EntityID = 1):
 
-def deleteStudentOfficeVisitNotification(StudentOfficeVisitNotificationID, entity_id = 1):
+	make_request(endpoint = "/Generic/" + EntityID + "/Guidance/StudentOfficeVisitNote/" + StudentOfficeVisitNoteID, verb = "delete")
 
-	make_request(endpoint = "/Generic/" + entity_id + "/Guidance/StudentOfficeVisitNotification/" + StudentOfficeVisitNotificationID, verb = "delete")
+def deleteStudentOfficeVisitNotification(StudentOfficeVisitNotificationID, EntityID = 1):
 
-def deleteStudentOfficeVisitReason(StudentOfficeVisitReasonID, entity_id = 1):
+	make_request(endpoint = "/Generic/" + EntityID + "/Guidance/StudentOfficeVisitNotification/" + StudentOfficeVisitNotificationID, verb = "delete")
 
-	make_request(endpoint = "/Generic/" + entity_id + "/Guidance/StudentOfficeVisitReason/" + StudentOfficeVisitReasonID, verb = "delete")
+def deleteStudentOfficeVisitReason(StudentOfficeVisitReasonID, EntityID = 1):
 
-def deleteStudentOfficeVisitTimeTransaction(StudentOfficeVisitTimeTransactionID, entity_id = 1):
+	make_request(endpoint = "/Generic/" + EntityID + "/Guidance/StudentOfficeVisitReason/" + StudentOfficeVisitReasonID, verb = "delete")
 
-	make_request(endpoint = "/Generic/" + entity_id + "/Guidance/StudentOfficeVisitTimeTransaction/" + StudentOfficeVisitTimeTransactionID, verb = "delete")
+def deleteStudentOfficeVisitTimeTransaction(StudentOfficeVisitTimeTransactionID, EntityID = 1):
+
+	make_request(endpoint = "/Generic/" + EntityID + "/Guidance/StudentOfficeVisitTimeTransaction/" + StudentOfficeVisitTimeTransactionID, verb = "delete")
