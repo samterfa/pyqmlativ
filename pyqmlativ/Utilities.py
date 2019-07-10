@@ -1,8 +1,7 @@
-# import pandas as pd
-# import os
-# import json
-# import requests
-# from requests_oauthlib import OAuth1Session
+import pandas as pd
+import os
+import json
+from requests_oauthlib import OAuth1Session
 
 try:
     import credentials
@@ -85,7 +84,7 @@ def generateFunctions(modules = all_modules.module_name, EntityID = 1):
     # Open ini file to make sure newly created functions are imported.
     ini_file_path = 'pyqmlativ/__init__.py'
     ini_file = open(ini_file_path, "w")
-    ini_file.write('from .utilities import *')
+    ini_file.write('from .Utilities import *')
 
     for module_name in modules:
         
@@ -93,17 +92,18 @@ def generateFunctions(modules = all_modules.module_name, EntityID = 1):
 
         ini_file.write('\n\nimport pyqmlativ.' + module_name)
         
-        # Create module as a Python module.
+        # Create module as a Python module and initiate it.
         module_file_path = 'pyqmlativ/' + module_name + '.py'
         module_file = open(module_file_path, "w")
         module_file.write('# This module contains ' + module_name + ' functions.')
-        module_file.write('\n\nfrom . import make_request')
+        module_file.write('\n\nfrom .Utilities import make_request')
+        module_file.write('\n\nimport pandas as pd')
+
+        # Append functions to module file.
         module_file = open(module_file_path, "a")
 
         module_endpoint = '/'.join(['', 'Generic', str(EntityID), module_name])
-
         objects_and_endpoints = make_request(module_endpoint)
-        
         objects = list(objects_and_endpoints.index)
         object_endpoints = [ item['href'] for item in objects_and_endpoints ]
 

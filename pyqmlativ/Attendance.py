@@ -1,6 +1,8 @@
 # This module contains Attendance functions.
 
-from . import make_request
+from .Utilities import make_request
+
+import pandas as pd
 
 def getAttendancePeriod(AttendancePeriodID, EntityID = 1, returnAttendancePeriodIDClonedFrom = False, returnAttendancePeriodIDClonedTo = False, returnCode = False, returnCreatedTime = False, returnDisplayOrder = False, returnEntityGroupKey = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnUseTeacherEntryCutOffTime = False, returnRelationships = False):
 
