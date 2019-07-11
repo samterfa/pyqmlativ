@@ -56,11 +56,11 @@ def make_request(endpoint, verb = 'get', params_list = [], payload = None):
         df = pd.read_json(json.dumps(r.json()), typ = 'Series')
 
     elif verb == 'post':
-        r = sess.post(request_url, params = params, data = payload)
+        r = sess.post(request_url, params_list = params_list, data = payload)
         df = pd.read_json(json.dumps(r.json()), typ = 'Series')
 
     elif verb == 'put':
-        r = sess.put(request_url, params = params, data = payload)
+        r = sess.put(request_url, params_list = params_list, data = payload)
         df = pd.read_json(json.dumps(r.json()), typ = 'Series')
 
     elif verb == 'delete':
@@ -76,7 +76,7 @@ def make_request(endpoint, verb = 'get', params_list = [], payload = None):
         return(r.json())
 
 # This function generates api request functions.
-def generateFunctions(modules = all_modules.module_name, EntityID = 1):
+def generate_functions(modules = all_modules.module_name, EntityID = 1):
     
     if(isinstance(modules, str)):
         modules = [modules]
@@ -120,21 +120,50 @@ def generateFunctions(modules = all_modules.module_name, EntityID = 1):
             id_field = field_names[id_field_index]
 
             #### Create human-readable function names.
+
+            # Grab non-read-only fields for possible payload fields.
+            payload_field_names = [ field_name for field_name in field_names if 'ReadOnly' not in fields[field_name].keys()]
             
-            # get_object()
+            # Grab all fields for possible return fields.
+            return_field_names = field_names
+            
+            # getEveryObject()
+            functionName = 'getEvery' + object_name
+            function_text_line_1 = '\n\ndef ' + functionName + '(EntityID = 1, page = 1, pageSize = 100'
+
+            for field_name in return_field_names:
+
+                # Make the ID variable return by default.
+                if field_name == id_field:
+                    function_text_line_1 = function_text_line_1 + ', return' + field_name + ' = True'
+                else:
+                    function_text_line_1 = function_text_line_1 + ', return' + field_name + ' = False'
+
+            function_text_line_1 = function_text_line_1 + '):'
+
+            module_file.write(function_text_line_1)
+
+            module_file.write('\n\n\tparams = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])')
+            module_file.write('\n\tparams_list = []')
+            module_file.write('\n\tparams_list.extend(list(params[[(value is True) for value in params.value]].index))')
+            module_file.write('\n\tparams_list = [ param.replace("return", "") for param in params_list ]')
+            module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/" + str(page) + "/" + str(pageSize), verb = "get", params_list = params_list)')
+            module_file.write('\n\n\tif "error" in response.keys():')
+            module_file.write('\n\t\traise Exception(response["error"])')
+            module_file.write('\n\telse:')
+            module_file.write('\n\t\treturn(pd.DataFrame.from_dict(response.Objects))')
+
+            # getObject()
             functionName = 'get' + object_name
             function_text_line_1 = '\n\ndef ' + functionName + '(' + id_field + ', EntityID = 1'
-            
-            field_names.remove(id_field)
 
-            field_names = ['return' + field_name for field_name in field_names]
+            for field_name in return_field_names:
 
-            for field_name in field_names:
-
-                if field_names.index(field_name) == 0:
-                    function_text_line_1 = function_text_line_1 + ', ' + field_name + ' = False'
+                # Make the ID variable return by default.
+                if field_name == id_field:
+                    function_text_line_1 = function_text_line_1 + ', return' + field_name + ' = True'
                 else:
-                    function_text_line_1 = function_text_line_1 + ', ' + field_name + ' = False'
+                    function_text_line_1 = function_text_line_1 + ', return' + field_name + ' = False'
 
             function_text_line_1 = function_text_line_1 + '):'
 
@@ -145,19 +174,47 @@ def generateFunctions(modules = all_modules.module_name, EntityID = 1):
             module_file.write('\n\tparams_list.extend(list(params[[(value is True) for value in params.value]].index))')
             module_file.write('\n\tparams_list = [ param.replace("return", "") for param in params_list ]')
             module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/" + str(' + id_field + '), verb = "get", params_list = params_list)')
-            module_file.write('\n\n\treturn(response)')
+            module_file.write('\n\n\tif "error" in response.keys():')
+            module_file.write('\n\t\traise Exception(response["error"])')
+            module_file.write('\n\telse:')
+            module_file.write('\n\t\treturn(response)')
 
-            # delete_object()
+
+            # modifyObject()
+            functionName = 'modify' + object_name
+            function_text_line_1 = '\n\ndef ' + functionName + '(' + id_field + ', EntityID = 1'
+
+            for field_name in payload_field_names:
+               function_text_line_1 = function_text_line_1 + ', ' + field_name + ' = None'
+
+            for field_name in return_field_names:
+                # Make the ID variable return by default.
+                if field_name == id_field:
+                    function_text_line_1 = function_text_line_1 + ', return' + field_name + ' = True'
+                else:
+                    function_text_line_1 = function_text_line_1 + ', return' + field_name + ' = False'
+
+            function_text_line_1 = function_text_line_1 + '):'
+
+            module_file.write(function_text_line_1)
+
+            module_file.write('\n\n\tparams = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])')
+            module_file.write('\n\tparams_list = [params.index[0]]')
+            module_file.write('\n\tparams_list.extend(list(params[[(value is True) for value in params.value]].index))')
+            module_file.write('\n\tparams_list = [ param.replace("return", "") for param in params_list ]')
+            module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/" + str(' + id_field + '), verb = "post", params_list = params_list)')
+            module_file.write('\n\n\tif "error" in response.keys():')
+            module_file.write('\n\t\traise Exception(response["error"])')
+            module_file.write('\n\telse:')
+            module_file.write('\n\t\treturn(response)')
+
+            # deleteObject()
             functionName = 'delete' + object_name
 
             module_file.write('\n\ndef ' + functionName + '(' + id_field + ', EntityID = 1):')
             module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/" + str(' + id_field + '), verb = "delete")')
             module_file.write('\n\n\treturn(response)')
 
-            #return
-
-        module_file.close()
-
-        ini_file.close()
-        
-        return()
+            module_file.close()
+            ini_file.close()
+            return
