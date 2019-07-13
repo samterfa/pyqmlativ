@@ -37,7 +37,7 @@ def check_credentials():
         raise Exception('os.environ["consumer_secret"] must be set!')
 
 # This function performs a QMLATIV API request.
-def make_request(endpoint, verb = 'get', params_list = [], payload = None):
+def make_request(endpoint, verb = 'get', return_params_list = [], payload = None):
     
     check_credentials()
     
@@ -45,23 +45,23 @@ def make_request(endpoint, verb = 'get', params_list = [], payload = None):
     
     request_url = os.environ["api_url"] + endpoint
     
-    for param in params_list:
-        if params_list.index(param) == 0:
+    for param in return_params_list:
+        if return_params_list.index(param) == 0:
             request_url = request_url + '?searchFields=' + param
         else:
             request_url = request_url + '&searchFields=' + param
     
     if verb == 'get':
         r = sess.get(request_url)
-        df = pd.read_json(json.dumps(r.json()), typ = 'Series')
+        df = pd.read_json(json.dumps(r.json()), typ = 'Series', dtype=False)
 
     elif verb == 'post':
-        r = sess.post(request_url, params_list = params_list, data = payload)
-        df = pd.read_json(json.dumps(r.json()), typ = 'Series')
+        r = sess.post(request_url, data = payload)
+        df = pd.read_json(json.dumps(r.json()), typ = 'Series', dtype=False)
 
     elif verb == 'put':
-        r = sess.put(request_url, params_list = params_list, data = payload)
-        df = pd.read_json(json.dumps(r.json()), typ = 'Series')
+        r = sess.put(request_url, data = payload)
+        df = pd.read_json(json.dumps(r.json()), typ = 'Series', dtype=False)
 
     elif verb == 'delete':
         r = sess.delete(request_url)
@@ -144,10 +144,13 @@ def generate_functions(modules = all_modules.module_name, EntityID = 1):
             module_file.write(function_text_line_1)
 
             module_file.write('\n\n\tparams = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])')
-            module_file.write('\n\tparams_list = []')
-            module_file.write('\n\tparams_list.extend(list(params[[(value is True) for value in params.value]].index))')
-            module_file.write('\n\tparams_list = [ param.replace("return", "") for param in params_list ]')
-            module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/" + str(page) + "/" + str(pageSize), verb = "get", params_list = params_list)')
+            
+            module_file.write('\n\n\treturn_params_list = []')
+            module_file.write('\n\treturn_params_list.extend(list(params[[(value is True) for value in params.value]].index))')
+            module_file.write('\n\treturn_params_list = [ param.replace("return", "") for param in return_params_list ]')
+            
+            module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)')
+            
             module_file.write('\n\n\tif "error" in response.keys():')
             module_file.write('\n\t\traise Exception(response["error"])')
             module_file.write('\n\telse:')
@@ -170,22 +173,24 @@ def generate_functions(modules = all_modules.module_name, EntityID = 1):
             module_file.write(function_text_line_1)
 
             module_file.write('\n\n\tparams = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])')
-            module_file.write('\n\tparams_list = [params.index[0]]')
-            module_file.write('\n\tparams_list.extend(list(params[[(value is True) for value in params.value]].index))')
-            module_file.write('\n\tparams_list = [ param.replace("return", "") for param in params_list ]')
-            module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/" + str(' + id_field + '), verb = "get", params_list = params_list)')
+            
+            module_file.write('\n\n\treturn_params_list = []')
+            module_file.write('\n\treturn_params_list.extend(list(params[[(value is True) for value in params.value]].index))')
+            module_file.write('\n\treturn_params_list = [ param.replace("return", "") for param in return_params_list ]')
+            
+            module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/" + str(' + id_field + '), verb = "get", return_params_list = return_params_list)')
+            
             module_file.write('\n\n\tif "error" in response.keys():')
             module_file.write('\n\t\traise Exception(response["error"])')
             module_file.write('\n\telse:')
             module_file.write('\n\t\treturn(response)')
-
 
             # modifyObject()
             functionName = 'modify' + object_name
             function_text_line_1 = '\n\ndef ' + functionName + '(' + id_field + ', EntityID = 1'
 
             for field_name in payload_field_names:
-               function_text_line_1 = function_text_line_1 + ', ' + field_name + ' = None'
+                function_text_line_1 = function_text_line_1 + ', set' + field_name + ' = None'
 
             for field_name in return_field_names:
                 # Make the ID variable return by default.
@@ -199,10 +204,56 @@ def generate_functions(modules = all_modules.module_name, EntityID = 1):
             module_file.write(function_text_line_1)
 
             module_file.write('\n\n\tparams = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])')
-            module_file.write('\n\tparams_list = [params.index[0]]')
-            module_file.write('\n\tparams_list.extend(list(params[[(value is True) for value in params.value]].index))')
-            module_file.write('\n\tparams_list = [ param.replace("return", "") for param in params_list ]')
-            module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/" + str(' + id_field + '), verb = "post", params_list = params_list)')
+            
+            module_file.write('\n\n\treturn_params_list = []')
+            module_file.write('\n\treturn_params_list.extend(list(params[[(value is True) for value in params.value]].index))')
+            module_file.write('\n\treturn_params_list = [ param.replace("return", "", 1) for param in return_params_list ]')
+            
+            module_file.write('\n\n\tpayload_params = params[[(value is not None) for value in params.value]]')
+            module_file.write('\n\tpayload_params = payload_params[[("return" not in item) for item in payload_params.index]]')
+            module_file.write('\n\tpayload_params.index = [ name.replace("set", "", 1) for name in payload_params.index]')
+            module_file.write('\n\tpayload_params = dict({"DataObject": dict(payload_params[2:]["value"])})')
+            module_file.write('\n\tpayload_params = json.dumps(payload_params)')
+            
+            module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/" + str(' + id_field + '), verb = "post", return_params_list = return_params_list, payload = payload_params)')
+            
+            module_file.write('\n\n\tif "error" in response.keys():')
+            module_file.write('\n\t\traise Exception(response["error"])')
+            module_file.write('\n\telse:')
+            module_file.write('\n\t\treturn(response)')
+
+            # createObject()
+            functionName = 'create' + object_name
+            function_text_line_1 = '\n\ndef ' + functionName + '(EntityID = 1'
+
+            for field_name in payload_field_names:
+                function_text_line_1 = function_text_line_1 + ', set' + field_name + ' = None'
+
+            for field_name in return_field_names:
+                # Make the ID variable return by default.
+                if field_name == id_field:
+                    function_text_line_1 = function_text_line_1 + ', return' + field_name + ' = True'
+                else:
+                    function_text_line_1 = function_text_line_1 + ', return' + field_name + ' = False'
+
+            function_text_line_1 = function_text_line_1 + '):'
+
+            module_file.write(function_text_line_1)
+
+            module_file.write('\n\n\tparams = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])')
+            
+            module_file.write('\n\n\treturn_params_list = []')
+            module_file.write('\n\treturn_params_list.extend(list(params[[(value is True) for value in params.value]].index))')
+            module_file.write('\n\treturn_params_list = [ param.replace("return", "", 1) for param in return_params_list ]')
+            
+            module_file.write('\n\n\tpayload_params = params[[(value is not None) for value in params.value]]')
+            module_file.write('\n\tpayload_params = payload_params[[("return" not in item) for item in payload_params.index]]')
+            module_file.write('\n\tpayload_params.index = [ name.replace("set", "", 1) for name in payload_params.index]')
+            module_file.write('\n\tpayload_params = dict({"DataObject": dict(payload_params[1:]["value"])})')
+            module_file.write('\n\tpayload_params = json.dumps(payload_params)')
+            
+            module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/", verb = "put", return_params_list = return_params_list, payload = payload_params)')
+            
             module_file.write('\n\n\tif "error" in response.keys():')
             module_file.write('\n\t\traise Exception(response["error"])')
             module_file.write('\n\telse:')
