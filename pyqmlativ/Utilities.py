@@ -244,9 +244,13 @@ def generate_functions(modules = all_modules.module_name, EntityID = 1):
             module_file.write('\n\n\tparams = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])')
             
             module_file.write('\n\n\treturn_params_list = []')
-            module_file.write('\n\treturn_params_list.extend(list(params[[(value is True) for value in params.value]].index))')
+            #module_file.write('\n\treturn_params_list.extend(list(params[[(value is True) for value in params.value]].index))')
+            module_file.write('\n\treturn_params_list.extend(list(params[[((value is True) | (value not in [None, False])) for value in params.value]].index))')
+            module_file.write('\n\treturn_params_list = [ param for param in return_params_list if param != "EntityID"]')
             module_file.write('\n\treturn_params_list = [ param.replace("return", "", 1) for param in return_params_list ]')
-            
+            module_file.write('\n\treturn_params_list = [ param.replace("set", "", 1) for param in return_params_list ]')
+            module_file.write('\n\treturn_params_list = list(set(return_params_list))')
+
             module_file.write('\n\n\tpayload_params = params[[(value is not None) for value in params.value]]')
             module_file.write('\n\tpayload_params = payload_params[[("return" not in item) for item in payload_params.index]]')
             module_file.write('\n\tpayload_params.index = [ name.replace("set", "", 1) for name in payload_params.index]')

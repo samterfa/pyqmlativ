@@ -1,6 +1,6 @@
 # This module contains Attendance functions.
 
-from .Utilities import make_request
+#from .Utilities import make_request
 
 import pandas as pd
 
@@ -66,7 +66,7 @@ def createAttendancePeriod(EntityID = 1, setAttendancePeriodIDClonedFrom = None,
 	return_params_list = [ param.replace("return", "", 1) for param in return_params_list ]
 
 	payload_params = params[[(value is not None) for value in params.value]]
-	payload_params = payload_params[[("return" not in item) for item in payload_params.index]]
+	payload_params = payload_params[[("return" not in item | value is True) for item in payload_params.index]]
 	payload_params.index = [ name.replace("set", "", 1) for name in payload_params.index]
 	payload_params = dict({"DataObject": dict(payload_params[1:]["value"])})
 	payload_params = json.dumps(payload_params)
@@ -2012,15 +2012,18 @@ def createDisciplineThreshold(EntityID = 1, setActionID = None, setAllowDiscipli
 	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
 	return_params_list = []
-	return_params_list.extend(list(params[[(value is True) for value in params.value]].index))
+	return_params_list.extend(list(params[[((value is True) | (value not in [None, False])) for value in params.value]].index))
+	return_params_list = [ param for param in return_params_list if param != 'EntityID'] ###
 	return_params_list = [ param.replace("return", "", 1) for param in return_params_list ]
-
+	return_params_list = [ param.replace("set", "", 1) for param in return_params_list ]
+	return_params_list = list(set(return_params_list))
+	
 	payload_params = params[[(value is not None) for value in params.value]]
 	payload_params = payload_params[[("return" not in item) for item in payload_params.index]]
 	payload_params.index = [ name.replace("set", "", 1) for name in payload_params.index]
 	payload_params = dict({"DataObject": dict(payload_params[1:]["value"])})
 	payload_params = json.dumps(payload_params)
-
+	
 	response = make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/DisciplineThreshold/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
 	if "error" in response.keys():
