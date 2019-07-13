@@ -98,6 +98,7 @@ def generate_functions(modules = all_modules.module_name, EntityID = 1):
         module_file.write('# This module contains ' + module_name + ' functions.')
         module_file.write('\n\nfrom .Utilities import make_request')
         module_file.write('\n\nimport pandas as pd')
+        module_file.write('\n\nimport json')
 
         # Append functions to module file.
         module_file = open(module_file_path, "a")
@@ -266,6 +267,6 @@ def generate_functions(modules = all_modules.module_name, EntityID = 1):
             module_file.write('\n\n\tresponse = make_request(endpoint = "' + object_endpoint.replace('/1/', '/" + str(EntityID) + "/') + '/" + str(' + id_field + '), verb = "delete")')
             module_file.write('\n\n\treturn(response)')
 
-            module_file.close()
-            ini_file.close()
-            return
+        module_file.close()
+    ini_file.close()
+    return
