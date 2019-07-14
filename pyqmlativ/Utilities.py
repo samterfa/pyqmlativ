@@ -76,10 +76,10 @@ def make_request(endpoint, verb = 'get', return_params_list = [], payload = None
         return 'Object successfully deleted'
     
     if 'error' in r.json():
-        return (pd.DataFrame.from_dict(pd.read_json(json.dumps(r.json()), typ = 'Series', dtype=False)))['error']
+        raise Exception((pd.read_json(json.dumps(r.json()), typ = 'Series', dtype=False))['error'])
 
     if 'errors' in r.json():
-        return (pd.read_json(json.dumps(r.json()), typ = 'Series', dtype=False))['errors']
+        raise Exception((pd.read_json(json.dumps(r.json()), typ = 'Series', dtype=False))['errors'])
 
 # This function generates api request functions.
 def generate_functions(modules = all_modules.module_name, EntityID = 1):
