@@ -162,7 +162,10 @@ def generate_functions(modules = all_modules.module_name, EntityID = 1):
             
             # getObject()
             functionName = 'get' + object_name
-            function_text_line_1 = '\n\ndef ' + functionName + '(' + id_field + ', EntityID = 1'
+            if id_field == 'EntityID':
+                function_text_line_1 = '\n\ndef ' + functionName + '(' + id_field
+            else:    
+                function_text_line_1 = '\n\ndef ' + functionName + '(' + id_field + ', EntityID = 1'
 
             for field_name in return_field_names:
 
@@ -187,7 +190,11 @@ def generate_functions(modules = all_modules.module_name, EntityID = 1):
             
             # modifyObject()
             functionName = 'modify' + object_name
-            function_text_line_1 = '\n\ndef ' + functionName + '(' + id_field + ', EntityID = 1'
+
+            if id_field == 'EntityID':
+                function_text_line_1 = '\n\ndef ' + functionName + '(' + id_field
+            else:    
+                function_text_line_1 = '\n\ndef ' + functionName + '(' + id_field + ', EntityID = 1'
 
             for field_name in payload_field_names:
                 function_text_line_1 = function_text_line_1 + ', set' + field_name + ' = None'
@@ -251,7 +258,11 @@ def generate_functions(modules = all_modules.module_name, EntityID = 1):
             # deleteObject()
             functionName = 'delete' + object_name
 
-            module_file.write('\n\ndef ' + functionName + '(' + id_field + ', EntityID = 1):')
+            if id_field == 'EntityID':
+                function_text_line_1 = '\n\ndef ' + functionName + '(' + id_field
+            else:    
+                function_text_line_1 = '\n\ndef ' + functionName + '(' + id_field + ', EntityID = 1'
+
             module_file.write('\n\n\treturn make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")')
 
         module_file.close()

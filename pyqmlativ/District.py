@@ -61,8 +61,6 @@ def createBuilding(EntityID = 1, setAddressID = None, setCode = None, setDescrip
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Building/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
-def deleteBuilding(BuildingID, EntityID = 1):
-
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
 def getEveryCalendarYear(EntityID = 1, page = 1, pageSize = 100, returnCalendarYearID = True, returnCreatedTime = False, returnDescription = False, returnModifiedTime = False, returnNumericYear = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
@@ -117,8 +115,6 @@ def createCalendarYear(EntityID = 1, setDescription = None, setNumericYear = Non
 	payload_params = json.dumps(payload_params)
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/CalendarYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteCalendarYear(CalendarYearID, EntityID = 1):
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
@@ -175,8 +171,6 @@ def createConfigEntityYear(EntityID = 1, setConfigEntityYearIDClonedFrom = None,
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/ConfigEntityYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
-def deleteConfigEntityYear(ConfigEntityYearID, EntityID = 1):
-
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
 def getEveryDistrictGroup(EntityID = 1, page = 1, pageSize = 100, returnDistrictGroupID = True, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
@@ -231,8 +225,6 @@ def createDistrictGroup(EntityID = 1, setName = None, setRelationships = None, r
 	payload_params = json.dumps(payload_params)
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictGroup/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteDistrictGroup(DistrictGroupID, EntityID = 1):
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
@@ -289,8 +281,6 @@ def createDistrict(EntityID = 1, setBuildingID = None, setDistrictGroupID = None
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/District/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
-def deleteDistrict(DistrictID, EntityID = 1):
-
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
 def getEveryDistrictSchoolYear(EntityID = 1, page = 1, pageSize = 100, returnDistrictSchoolYearID = True, returnCreatedTime = False, returnDistrictID = False, returnDistrictSchoolYearIDClonedFrom = False, returnEdFiDistrictID = False, returnHarassmentPolicyWebLink = False, returnHasDesegregationPlan = False, returnHasDistanceEducation = False, returnHasEarlyChildhood = False, returnHasEarlyChildhoodNonIDEA = False, returnHasGEDPreparationProgram = False, returnHasHarassmentPolicy = False, returnHasKindergarten = False, returnHasKindergartenFullDayCost = False, returnHasKindergartenFullDayFree = False, returnHasKindergartenPartDayCost = False, returnHasKindergartenPartDayFree = False, returnHasPreschool = False, returnHasPreschoolAllChildren = False, returnHasPreschoolFullDayCost = False, returnHasPreschoolFullDayFree = False, returnHasPreschoolIDEA = False, returnHasPreschoolLowIncome = False, returnHasPreschoolPartDayCost = False, returnHasPreschoolPartDayFree = False, returnHasPreschoolTitleI = False, returnIsCRDCCollectedForSchoolYear = False, returnModifiedTime = False, returnNameIDDisability = False, returnNameIDRace = False, returnNameIDSex = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
@@ -345,8 +335,6 @@ def createDistrictSchoolYear(EntityID = 1, setDistrictID = None, setDistrictScho
 	payload_params = json.dumps(payload_params)
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictSchoolYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteDistrictSchoolYear(DistrictSchoolYearID, EntityID = 1):
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
@@ -403,8 +391,6 @@ def createEntityGroup(EntityID = 1, setDistrictID = None, setName = None, setRel
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroup/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
-def deleteEntityGroup(EntityGroupID, EntityID = 1):
-
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
 def getEveryEntityGroupEntity(EntityID = 1, page = 1, pageSize = 100, returnEntityGroupEntityID = True, returnCreatedTime = False, returnEntityGroupID = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
@@ -459,8 +445,6 @@ def createEntityGroupEntity(EntityID = 1, setEntityGroupID = None, setEntityID =
 	payload_params = json.dumps(payload_params)
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupEntity/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteEntityGroupEntity(EntityGroupEntityID, EntityID = 1):
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
@@ -517,8 +501,6 @@ def createEntityGroupSetup(EntityID = 1, setEntityGroupID = None, setEntityIDPri
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetup/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
-def deleteEntityGroupSetup(EntityGroupSetupID, EntityID = 1):
-
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
 def getEveryEntityGroupSetupEntity(EntityID = 1, page = 1, pageSize = 100, returnEntityGroupSetupEntityID = True, returnCreatedTime = False, returnEntityGroupSetupID = False, returnEntityID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
@@ -573,8 +555,6 @@ def createEntityGroupSetupEntity(EntityID = 1, setEntityGroupSetupID = None, set
 	payload_params = json.dumps(payload_params)
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupEntity/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteEntityGroupSetupEntity(EntityGroupSetupEntityID, EntityID = 1):
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
@@ -631,8 +611,6 @@ def createEntityGroupSetupRun(EntityID = 1, setEntityGroupSetupID = None, setRel
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRun/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
-def deleteEntityGroupSetupRun(EntityGroupSetupRunID, EntityID = 1):
-
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
 def getEveryEntityGroupSetupRunDetail(EntityID = 1, page = 1, pageSize = 100, returnEntityGroupSetupRunDetailID = True, returnChangeType = False, returnChangeTypeCode = False, returnCreatedTime = False, returnEntityGroupKey = False, returnEntityGroupSetupRunID = False, returnEntityID = False, returnError = False, returnIdentifyingFields = False, returnIsProcessed = False, returnIsUpdated = False, returnModifiedTime = False, returnModule = False, returnNewFieldValues = False, returnNewValues = False, returnObject = False, returnObjectPrimaryKey = False, returnOriginalValues = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
@@ -688,8 +666,6 @@ def createEntityGroupSetupRunDetail(EntityID = 1, setChangeType = None, setChang
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRunDetail/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
-def deleteEntityGroupSetupRunDetail(EntityGroupSetupRunDetailID, EntityID = 1):
-
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
 def getEveryEntity(EntityID = 1, page = 1, pageSize = 100, returnEntityID = True, returnAllowDualEnrollment = False, returnCampusID = False, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeEntityCode = False, returnDistrictID = False, returnEnforceAddressRangeDefaults = False, returnEntityCodeOrCombinedCodesFollettExport = False, returnEntityGroupCount = False, returnEntityIDHash = False, returnEntityMNID = False, returnExternalLinkEntityCount = False, returnIsDistrictWide = False, returnIsSystemWide = False, returnModifiedTime = False, returnName = False, returnReportToState = False, returnSchoolYearIDCurrent = False, returnTotalPlanEntityYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
@@ -703,7 +679,7 @@ def getEveryEntity(EntityID = 1, page = 1, pageSize = 100, returnEntityID = True
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Entity/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
 
-def getEntity(EntityID, EntityID = 1, returnEntityID = True, returnAllowDualEnrollment = False, returnCampusID = False, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeEntityCode = False, returnDistrictID = False, returnEnforceAddressRangeDefaults = False, returnEntityCodeOrCombinedCodesFollettExport = False, returnEntityGroupCount = False, returnEntityIDHash = False, returnEntityMNID = False, returnExternalLinkEntityCount = False, returnIsDistrictWide = False, returnIsSystemWide = False, returnModifiedTime = False, returnName = False, returnReportToState = False, returnSchoolYearIDCurrent = False, returnTotalPlanEntityYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+def getEntity(EntityID, returnEntityID = True, returnAllowDualEnrollment = False, returnCampusID = False, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeEntityCode = False, returnDistrictID = False, returnEnforceAddressRangeDefaults = False, returnEntityCodeOrCombinedCodesFollettExport = False, returnEntityGroupCount = False, returnEntityIDHash = False, returnEntityMNID = False, returnExternalLinkEntityCount = False, returnIsDistrictWide = False, returnIsSystemWide = False, returnModifiedTime = False, returnName = False, returnReportToState = False, returnSchoolYearIDCurrent = False, returnTotalPlanEntityYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
 	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
@@ -714,7 +690,7 @@ def getEntity(EntityID, EntityID = 1, returnEntityID = True, returnAllowDualEnro
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Entity/" + str(EntityID), verb = "get", return_params_list = return_params_list)
 
-def modifyEntity(EntityID, EntityID = 1, setAllowDualEnrollment = None, setCode = None, setDistrictID = None, setEnforceAddressRangeDefaults = None, setIsDistrictWide = None, setIsSystemWide = None, setName = None, setReportToState = None, setSchoolYearIDCurrent = None, setRelationships = None, returnEntityID = True, returnAllowDualEnrollment = False, returnCampusID = False, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeEntityCode = False, returnDistrictID = False, returnEnforceAddressRangeDefaults = False, returnEntityCodeOrCombinedCodesFollettExport = False, returnEntityGroupCount = False, returnEntityIDHash = False, returnEntityMNID = False, returnExternalLinkEntityCount = False, returnIsDistrictWide = False, returnIsSystemWide = False, returnModifiedTime = False, returnName = False, returnReportToState = False, returnSchoolYearIDCurrent = False, returnTotalPlanEntityYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+def modifyEntity(EntityID, setAllowDualEnrollment = None, setCode = None, setDistrictID = None, setEnforceAddressRangeDefaults = None, setIsDistrictWide = None, setIsSystemWide = None, setName = None, setReportToState = None, setSchoolYearIDCurrent = None, setRelationships = None, returnEntityID = True, returnAllowDualEnrollment = False, returnCampusID = False, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeEntityCode = False, returnDistrictID = False, returnEnforceAddressRangeDefaults = False, returnEntityCodeOrCombinedCodesFollettExport = False, returnEntityGroupCount = False, returnEntityIDHash = False, returnEntityMNID = False, returnExternalLinkEntityCount = False, returnIsDistrictWide = False, returnIsSystemWide = False, returnModifiedTime = False, returnName = False, returnReportToState = False, returnSchoolYearIDCurrent = False, returnTotalPlanEntityYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
 	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
@@ -744,8 +720,6 @@ def createEntity(EntityID = 1, setAllowDualEnrollment = None, setCode = None, se
 	payload_params = json.dumps(payload_params)
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Entity/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteEntity(EntityID, EntityID = 1):
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
@@ -802,8 +776,6 @@ def createFiscalYear(EntityID = 1, setDescription = None, setDistrictID = None, 
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/FiscalYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
-def deleteFiscalYear(FiscalYearID, EntityID = 1):
-
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
 def getEveryRoom(EntityID = 1, page = 1, pageSize = 100, returnRoomID = True, returnBuildingCodeRoomNumber = False, returnBuildingID = False, returnCreatedTime = False, returnDescription = False, returnFormattedPhoneNumber = False, returnMaxConcurrentSections = False, returnMaxSeats = False, returnModifiedTime = False, returnPhoneExtension = False, returnPhoneNumber = False, returnPhoneNumberIsInternational = False, returnRoomNumber = False, returnRoomNumberDescription = False, returnRoomTypeID = False, returnSquareFootage = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
@@ -858,8 +830,6 @@ def createRoom(EntityID = 1, setBuildingID = None, setDescription = None, setMax
 	payload_params = json.dumps(payload_params)
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Room/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteRoom(RoomID, EntityID = 1):
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
@@ -916,8 +886,6 @@ def createRoomType(EntityID = 1, setCode = None, setDescription = None, setDistr
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/RoomType/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
-def deleteRoomType(RoomTypeID, EntityID = 1):
-
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
 def getEverySchoolYear(EntityID = 1, page = 1, pageSize = 100, returnSchoolYearID = True, returnCreatedTime = False, returnDescription = False, returnIsCurrentYearForProvidedEntity = False, returnIsUpcomingYearForProvidedEntity = False, returnModifiedTime = False, returnNextNumericYear = False, returnNumericYear = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
@@ -973,8 +941,6 @@ def createSchoolYear(EntityID = 1, setDescription = None, setNumericYear = None,
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/SchoolYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
-def deleteSchoolYear(SchoolYearID, EntityID = 1):
-
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
 def getEveryStateDistrictMN(EntityID = 1, page = 1, pageSize = 100, returnStateDistrictMNID = True, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnStateDistrictTypeCodeMNID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
@@ -1029,7 +995,5 @@ def createStateDistrictMN(EntityID = 1, setCode = None, setName = None, setState
 	payload_params = json.dumps(payload_params)
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/StateDistrictMN/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteStateDistrictMN(StateDistrictMNID, EntityID = 1):
 
 	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
