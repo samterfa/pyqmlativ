@@ -41,5 +41,3 @@ import pyqmlativ.StaffPlanning
 import pyqmlativ.Student
 
 import pyqmlativ.Transportation
-
-import json
