@@ -34,6 +34,8 @@ import pyqmlativ.Scheduling
 
 import pyqmlativ.Security
 
+import pyqmlativ.SkySys
+
 import pyqmlativ.Staff
 
 import pyqmlativ.StaffPlanning

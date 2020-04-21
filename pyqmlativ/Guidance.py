@@ -1,6 +1,6 @@
 # This module contains Guidance functions.
 
-from .Utilities import make_request
+from .Utilities import *
 
 import pandas as pd
 
@@ -8,515 +8,299 @@ import json
 
 import re
 
-def getEveryNotificationMethod(EntityID = 1, page = 1, pageSize = 100, returnNotificationMethodID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryNotificationMethod(searchConditions = [], EntityID = 1, returnNotificationMethodID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every NotificationMethod in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/NotificationMethod/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every NotificationMethod in the district filtered by search conditions.
 
-def getNotificationMethod(NotificationMethodID, EntityID = 1, returnNotificationMethodID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/NotificationMethod/" + str(NotificationMethodID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyNotificationMethod(NotificationMethodID, EntityID = 1, setCode = None, setDescription = None, setDistrictGroupKey = None, setDistrictID = None, setIsActive = None, setRelationships = None, returnNotificationMethodID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/NotificationMethod/" + str(NotificationMethodID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createNotificationMethod(EntityID = 1, setCode = None, setDescription = None, setDistrictGroupKey = None, setDistrictID = None, setIsActive = None, setRelationships = None, returnNotificationMethodID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/NotificationMethod/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/NotificationMethod/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryOfficeVisitComment(searchConditions = [], EntityID = 1, returnOfficeVisitCommentID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/NotificationMethod/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every OfficeVisitComment in the district.
 
-def deleteNotificationMethod(NotificationMethodID, EntityID = 1):
+	This function returns a dataframe of every OfficeVisitComment in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryOfficeVisitComment(EntityID = 1, page = 1, pageSize = 100, returnOfficeVisitCommentID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitComment/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getOfficeVisitComment(OfficeVisitCommentID, EntityID = 1, returnOfficeVisitCommentID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitComment/" + str(OfficeVisitCommentID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyOfficeVisitComment(OfficeVisitCommentID, EntityID = 1, setCode = None, setDescription = None, setDistrictGroupKey = None, setDistrictID = None, setIsActive = None, setRelationships = None, returnOfficeVisitCommentID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitComment/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitComment/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryOfficeVisitGuardianResponse(searchConditions = [], EntityID = 1, returnOfficeVisitGuardianResponseID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitComment/" + str(OfficeVisitCommentID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every OfficeVisitGuardianResponse in the district.
 
-def createOfficeVisitComment(EntityID = 1, setCode = None, setDescription = None, setDistrictGroupKey = None, setDistrictID = None, setIsActive = None, setRelationships = None, returnOfficeVisitCommentID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every OfficeVisitGuardianResponse in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitComment/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteOfficeVisitComment(OfficeVisitCommentID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryOfficeVisitGuardianResponse(EntityID = 1, page = 1, pageSize = 100, returnOfficeVisitGuardianResponseID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitGuardianResponse/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitGuardianResponse/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getOfficeVisitGuardianResponse(OfficeVisitGuardianResponseID, EntityID = 1, returnOfficeVisitGuardianResponseID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitGuardianResponse/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryOfficeVisitReason(searchConditions = [], EntityID = 1, returnOfficeVisitReasonID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitGuardianResponse/" + str(OfficeVisitGuardianResponseID), verb = "get", return_params_list = return_params_list)
+	"""Get every OfficeVisitReason in the district.
 
-def modifyOfficeVisitGuardianResponse(OfficeVisitGuardianResponseID, EntityID = 1, setCode = None, setDescription = None, setDistrictGroupKey = None, setDistrictID = None, setIsActive = None, setRelationships = None, returnOfficeVisitGuardianResponseID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every OfficeVisitReason in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitGuardianResponse/" + str(OfficeVisitGuardianResponseID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createOfficeVisitGuardianResponse(EntityID = 1, setCode = None, setDescription = None, setDistrictGroupKey = None, setDistrictID = None, setIsActive = None, setRelationships = None, returnOfficeVisitGuardianResponseID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitGuardianResponse/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteOfficeVisitGuardianResponse(OfficeVisitGuardianResponseID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitReason/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitReason/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryOfficeVisitReason(EntityID = 1, page = 1, pageSize = 100, returnOfficeVisitReasonID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryStudentOfficeVisit(searchConditions = [], EntityID = 1, returnStudentOfficeVisitID = False, returnCreatedTime = False, returnDisplayStatus = False, returnDocumentationIsComplete = False, returnEntityID = False, returnHasBeenReleased = False, returnIsStudentOfficeVisitToday = False, returnModifiedTime = False, returnOfficeVisitCommentID = False, returnSchoolID = False, returnSchoolYearID = False, returnStudentID = False, returnStudentOfficeVisitReasonsListDisplay = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every StudentOfficeVisit in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitReason/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every StudentOfficeVisit in the district filtered by search conditions.
 
-def getOfficeVisitReason(OfficeVisitReasonID, EntityID = 1, returnOfficeVisitReasonID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitReason/" + str(OfficeVisitReasonID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyOfficeVisitReason(OfficeVisitReasonID, EntityID = 1, setCode = None, setDescription = None, setDistrictGroupKey = None, setDistrictID = None, setIsActive = None, setRelationships = None, returnOfficeVisitReasonID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitReason/" + str(OfficeVisitReasonID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createOfficeVisitReason(EntityID = 1, setCode = None, setDescription = None, setDistrictGroupKey = None, setDistrictID = None, setIsActive = None, setRelationships = None, returnOfficeVisitReasonID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictGroupKey = False, returnDistrictID = False, returnIsActive = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisit/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisit/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryStudentOfficeVisitNote(searchConditions = [], EntityID = 1, returnStudentOfficeVisitNoteID = False, returnCreatedTime = False, returnModifiedTime = False, returnNote = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/OfficeVisitReason/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every StudentOfficeVisitNote in the district.
 
-def deleteOfficeVisitReason(OfficeVisitReasonID, EntityID = 1):
+	This function returns a dataframe of every StudentOfficeVisitNote in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryStudentOfficeVisit(EntityID = 1, page = 1, pageSize = 100, returnStudentOfficeVisitID = True, returnCreatedTime = False, returnDisplayStatus = False, returnDocumentationIsComplete = False, returnEntityID = False, returnHasBeenReleased = False, returnIsStudentOfficeVisitToday = False, returnModifiedTime = False, returnOfficeVisitCommentID = False, returnSchoolID = False, returnSchoolYearID = False, returnStudentID = False, returnStudentOfficeVisitReasonsListDisplay = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisit/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getStudentOfficeVisit(StudentOfficeVisitID, EntityID = 1, returnStudentOfficeVisitID = True, returnCreatedTime = False, returnDisplayStatus = False, returnDocumentationIsComplete = False, returnEntityID = False, returnHasBeenReleased = False, returnIsStudentOfficeVisitToday = False, returnModifiedTime = False, returnOfficeVisitCommentID = False, returnSchoolID = False, returnSchoolYearID = False, returnStudentID = False, returnStudentOfficeVisitReasonsListDisplay = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisit/" + str(StudentOfficeVisitID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyStudentOfficeVisit(StudentOfficeVisitID, EntityID = 1, setDocumentationIsComplete = None, setEntityID = None, setHasBeenReleased = None, setIsStudentOfficeVisitToday = None, setOfficeVisitCommentID = None, setSchoolID = None, setSchoolYearID = None, setStudentID = None, setRelationships = None, returnStudentOfficeVisitID = True, returnCreatedTime = False, returnDisplayStatus = False, returnDocumentationIsComplete = False, returnEntityID = False, returnHasBeenReleased = False, returnIsStudentOfficeVisitToday = False, returnModifiedTime = False, returnOfficeVisitCommentID = False, returnSchoolID = False, returnSchoolYearID = False, returnStudentID = False, returnStudentOfficeVisitReasonsListDisplay = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNote/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNote/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryStudentOfficeVisitNotification(searchConditions = [], EntityID = 1, returnStudentOfficeVisitNotificationID = False, returnCreatedTime = False, returnModifiedTime = False, returnNameID = False, returnNote = False, returnNotificationMethodID = False, returnNotificationTime = False, returnNotificationTimeDate = False, returnNotificationTimeTime = False, returnOfficeVisitGuardianResponseID = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisit/" + str(StudentOfficeVisitID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every StudentOfficeVisitNotification in the district.
 
-def createStudentOfficeVisit(EntityID = 1, setDocumentationIsComplete = None, setEntityID = None, setHasBeenReleased = None, setIsStudentOfficeVisitToday = None, setOfficeVisitCommentID = None, setSchoolID = None, setSchoolYearID = None, setStudentID = None, setRelationships = None, returnStudentOfficeVisitID = True, returnCreatedTime = False, returnDisplayStatus = False, returnDocumentationIsComplete = False, returnEntityID = False, returnHasBeenReleased = False, returnIsStudentOfficeVisitToday = False, returnModifiedTime = False, returnOfficeVisitCommentID = False, returnSchoolID = False, returnSchoolYearID = False, returnStudentID = False, returnStudentOfficeVisitReasonsListDisplay = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every StudentOfficeVisitNotification in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisit/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteStudentOfficeVisit(StudentOfficeVisitID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryStudentOfficeVisitNote(EntityID = 1, page = 1, pageSize = 100, returnStudentOfficeVisitNoteID = True, returnCreatedTime = False, returnModifiedTime = False, returnNote = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNote/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNotification/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getStudentOfficeVisitNote(StudentOfficeVisitNoteID, EntityID = 1, returnStudentOfficeVisitNoteID = True, returnCreatedTime = False, returnModifiedTime = False, returnNote = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNotification/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryStudentOfficeVisitReason(searchConditions = [], EntityID = 1, returnStudentOfficeVisitReasonID = False, returnCreatedTime = False, returnModifiedTime = False, returnOfficeVisitReasonID = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNote/" + str(StudentOfficeVisitNoteID), verb = "get", return_params_list = return_params_list)
+	"""Get every StudentOfficeVisitReason in the district.
 
-def modifyStudentOfficeVisitNote(StudentOfficeVisitNoteID, EntityID = 1, setNote = None, setStudentOfficeVisitID = None, setRelationships = None, returnStudentOfficeVisitNoteID = True, returnCreatedTime = False, returnModifiedTime = False, returnNote = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every StudentOfficeVisitReason in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNote/" + str(StudentOfficeVisitNoteID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createStudentOfficeVisitNote(EntityID = 1, setNote = None, setStudentOfficeVisitID = None, setRelationships = None, returnStudentOfficeVisitNoteID = True, returnCreatedTime = False, returnModifiedTime = False, returnNote = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNote/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteStudentOfficeVisitNote(StudentOfficeVisitNoteID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitReason/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitReason/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryStudentOfficeVisitNotification(EntityID = 1, page = 1, pageSize = 100, returnStudentOfficeVisitNotificationID = True, returnCreatedTime = False, returnModifiedTime = False, returnNameID = False, returnNote = False, returnNotificationMethodID = False, returnNotificationTime = False, returnNotificationTimeDate = False, returnNotificationTimeTime = False, returnOfficeVisitGuardianResponseID = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryStudentOfficeVisitTimeTransaction(searchConditions = [], EntityID = 1, returnStudentOfficeVisitTimeTransactionID = False, returnCreatedTime = False, returnDisplayDuration = False, returnDisplayOrder = False, returnDuration = False, returnEndTime = False, returnEndTimeDate = False, returnEndTimeTime = False, returnModifiedTime = False, returnNote = False, returnStartTime = False, returnStartTimeDate = False, returnStartTimeTime = False, returnStatus = False, returnStatusCode = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every StudentOfficeVisitTimeTransaction in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNotification/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every StudentOfficeVisitTimeTransaction in the district filtered by search conditions.
 
-def getStudentOfficeVisitNotification(StudentOfficeVisitNotificationID, EntityID = 1, returnStudentOfficeVisitNotificationID = True, returnCreatedTime = False, returnModifiedTime = False, returnNameID = False, returnNote = False, returnNotificationMethodID = False, returnNotificationTime = False, returnNotificationTimeDate = False, returnNotificationTimeTime = False, returnOfficeVisitGuardianResponseID = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNotification/" + str(StudentOfficeVisitNotificationID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyStudentOfficeVisitNotification(StudentOfficeVisitNotificationID, EntityID = 1, setNameID = None, setNote = None, setNotificationMethodID = None, setNotificationTime = None, setNotificationTimeDate = None, setNotificationTimeTime = None, setOfficeVisitGuardianResponseID = None, setStudentOfficeVisitID = None, setRelationships = None, returnStudentOfficeVisitNotificationID = True, returnCreatedTime = False, returnModifiedTime = False, returnNameID = False, returnNote = False, returnNotificationMethodID = False, returnNotificationTime = False, returnNotificationTimeDate = False, returnNotificationTimeTime = False, returnOfficeVisitGuardianResponseID = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNotification/" + str(StudentOfficeVisitNotificationID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createStudentOfficeVisitNotification(EntityID = 1, setNameID = None, setNote = None, setNotificationMethodID = None, setNotificationTime = None, setNotificationTimeDate = None, setNotificationTimeTime = None, setOfficeVisitGuardianResponseID = None, setStudentOfficeVisitID = None, setRelationships = None, returnStudentOfficeVisitNotificationID = True, returnCreatedTime = False, returnModifiedTime = False, returnNameID = False, returnNote = False, returnNotificationMethodID = False, returnNotificationTime = False, returnNotificationTimeDate = False, returnNotificationTimeTime = False, returnOfficeVisitGuardianResponseID = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitTimeTransaction/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitNotification/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteStudentOfficeVisitNotification(StudentOfficeVisitNotificationID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEveryStudentOfficeVisitReason(EntityID = 1, page = 1, pageSize = 100, returnStudentOfficeVisitReasonID = True, returnCreatedTime = False, returnModifiedTime = False, returnOfficeVisitReasonID = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitReason/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getStudentOfficeVisitReason(StudentOfficeVisitReasonID, EntityID = 1, returnStudentOfficeVisitReasonID = True, returnCreatedTime = False, returnModifiedTime = False, returnOfficeVisitReasonID = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitReason/" + str(StudentOfficeVisitReasonID), verb = "get", return_params_list = return_params_list)
-
-def modifyStudentOfficeVisitReason(StudentOfficeVisitReasonID, EntityID = 1, setOfficeVisitReasonID = None, setStudentOfficeVisitID = None, setRelationships = None, returnStudentOfficeVisitReasonID = True, returnCreatedTime = False, returnModifiedTime = False, returnOfficeVisitReasonID = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitReason/" + str(StudentOfficeVisitReasonID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createStudentOfficeVisitReason(EntityID = 1, setOfficeVisitReasonID = None, setStudentOfficeVisitID = None, setRelationships = None, returnStudentOfficeVisitReasonID = True, returnCreatedTime = False, returnModifiedTime = False, returnOfficeVisitReasonID = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitReason/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteStudentOfficeVisitReason(StudentOfficeVisitReasonID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEveryStudentOfficeVisitTimeTransaction(EntityID = 1, page = 1, pageSize = 100, returnStudentOfficeVisitTimeTransactionID = True, returnCreatedTime = False, returnDisplayDuration = False, returnDisplayOrder = False, returnDuration = False, returnEndTime = False, returnEndTimeDate = False, returnEndTimeTime = False, returnModifiedTime = False, returnNote = False, returnStartTime = False, returnStartTimeDate = False, returnStartTimeTime = False, returnStatus = False, returnStatusCode = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitTimeTransaction/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getStudentOfficeVisitTimeTransaction(StudentOfficeVisitTimeTransactionID, EntityID = 1, returnStudentOfficeVisitTimeTransactionID = True, returnCreatedTime = False, returnDisplayDuration = False, returnDisplayOrder = False, returnDuration = False, returnEndTime = False, returnEndTimeDate = False, returnEndTimeTime = False, returnModifiedTime = False, returnNote = False, returnStartTime = False, returnStartTimeDate = False, returnStartTimeTime = False, returnStatus = False, returnStatusCode = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitTimeTransaction/" + str(StudentOfficeVisitTimeTransactionID), verb = "get", return_params_list = return_params_list)
-
-def modifyStudentOfficeVisitTimeTransaction(StudentOfficeVisitTimeTransactionID, EntityID = 1, setDisplayOrder = None, setEndTime = None, setEndTimeDate = None, setEndTimeTime = None, setNote = None, setStartTime = None, setStartTimeDate = None, setStartTimeTime = None, setStatus = None, setStatusCode = None, setStudentOfficeVisitID = None, setRelationships = None, returnStudentOfficeVisitTimeTransactionID = True, returnCreatedTime = False, returnDisplayDuration = False, returnDisplayOrder = False, returnDuration = False, returnEndTime = False, returnEndTimeDate = False, returnEndTimeTime = False, returnModifiedTime = False, returnNote = False, returnStartTime = False, returnStartTimeDate = False, returnStartTimeTime = False, returnStatus = False, returnStatusCode = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitTimeTransaction/" + str(StudentOfficeVisitTimeTransactionID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createStudentOfficeVisitTimeTransaction(EntityID = 1, setDisplayOrder = None, setEndTime = None, setEndTimeDate = None, setEndTimeTime = None, setNote = None, setStartTime = None, setStartTimeDate = None, setStartTimeTime = None, setStatus = None, setStatusCode = None, setStudentOfficeVisitID = None, setRelationships = None, returnStudentOfficeVisitTimeTransactionID = True, returnCreatedTime = False, returnDisplayDuration = False, returnDisplayOrder = False, returnDuration = False, returnEndTime = False, returnEndTimeDate = False, returnEndTimeTime = False, returnModifiedTime = False, returnNote = False, returnStartTime = False, returnStartTimeDate = False, returnStartTimeTime = False, returnStatus = False, returnStatusCode = False, returnStudentOfficeVisitID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitTimeTransaction/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteStudentOfficeVisitTimeTransaction(StudentOfficeVisitTimeTransactionID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/Guidance/StudentOfficeVisitTimeTransaction/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)

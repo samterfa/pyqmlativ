@@ -1,6 +1,6 @@
 # This module contains GraduationRequirements functions.
 
-from .Utilities import make_request
+from .Utilities import *
 
 import pandas as pd
 
@@ -8,3023 +8,1784 @@ import json
 
 import re
 
-def getEveryArea(EntityID = 1, page = 1, pageSize = 100, returnAreaID = True, returnCreatedTime = False, returnDescription = False, returnDisplayOrder = False, returnElectiveSubAreaID = False, returnGradReqRankGPARequiredCourseRuleOverride = False, returnGradReqRankGPARequiredCourseRuleOverrideCode = False, returnIsElective = False, returnIsNotElective = False, returnIsNotSystemArea = False, returnIsSystemArea = False, returnModifiedTime = False, returnNonElectiveCreditTotal = False, returnPlanID = False, returnSkywardHash = False, returnSkywardID = False, returnTotalCredits = False, returnUseGradReqSubjectType = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryArea(searchConditions = [], EntityID = 1, returnAreaID = False, returnCreatedTime = False, returnDescription = False, returnDisplayOrder = False, returnElectiveSubAreaID = False, returnGradReqRankGPARequiredCourseRuleOverride = False, returnGradReqRankGPARequiredCourseRuleOverrideCode = False, returnIsElective = False, returnIsNotElective = False, returnIsNotSystemArea = False, returnIsSystemArea = False, returnModifiedTime = False, returnNonElectiveCreditTotal = False, returnPlanID = False, returnSkywardHash = False, returnSkywardID = False, returnTotalCredits = False, returnUseGradReqSubjectType = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every Area in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Area/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every Area in the district filtered by search conditions.
 
-def getArea(AreaID, EntityID = 1, returnAreaID = True, returnCreatedTime = False, returnDescription = False, returnDisplayOrder = False, returnElectiveSubAreaID = False, returnGradReqRankGPARequiredCourseRuleOverride = False, returnGradReqRankGPARequiredCourseRuleOverrideCode = False, returnIsElective = False, returnIsNotElective = False, returnIsNotSystemArea = False, returnIsSystemArea = False, returnModifiedTime = False, returnNonElectiveCreditTotal = False, returnPlanID = False, returnSkywardHash = False, returnSkywardID = False, returnTotalCredits = False, returnUseGradReqSubjectType = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Area/" + str(AreaID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyArea(AreaID, EntityID = 1, setDescription = None, setDisplayOrder = None, setGradReqRankGPARequiredCourseRuleOverride = None, setGradReqRankGPARequiredCourseRuleOverrideCode = None, setIsElective = None, setPlanID = None, setSkywardHash = None, setSkywardID = None, setTotalCredits = None, setUseGradReqSubjectType = None, setRelationships = None, returnAreaID = True, returnCreatedTime = False, returnDescription = False, returnDisplayOrder = False, returnElectiveSubAreaID = False, returnGradReqRankGPARequiredCourseRuleOverride = False, returnGradReqRankGPARequiredCourseRuleOverrideCode = False, returnIsElective = False, returnIsNotElective = False, returnIsNotSystemArea = False, returnIsSystemArea = False, returnModifiedTime = False, returnNonElectiveCreditTotal = False, returnPlanID = False, returnSkywardHash = False, returnSkywardID = False, returnTotalCredits = False, returnUseGradReqSubjectType = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Area/" + str(AreaID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createArea(EntityID = 1, setDescription = None, setDisplayOrder = None, setGradReqRankGPARequiredCourseRuleOverride = None, setGradReqRankGPARequiredCourseRuleOverrideCode = None, setIsElective = None, setPlanID = None, setSkywardHash = None, setSkywardID = None, setTotalCredits = None, setUseGradReqSubjectType = None, setRelationships = None, returnAreaID = True, returnCreatedTime = False, returnDescription = False, returnDisplayOrder = False, returnElectiveSubAreaID = False, returnGradReqRankGPARequiredCourseRuleOverride = False, returnGradReqRankGPARequiredCourseRuleOverrideCode = False, returnIsElective = False, returnIsNotElective = False, returnIsNotSystemArea = False, returnIsSystemArea = False, returnModifiedTime = False, returnNonElectiveCreditTotal = False, returnPlanID = False, returnSkywardHash = False, returnSkywardID = False, returnTotalCredits = False, returnUseGradReqSubjectType = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Area/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Area/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryCareerPlanDeclarationTimePeriod(searchConditions = [], EntityID = 1, returnCareerPlanDeclarationTimePeriodID = False, returnCreatedTime = False, returnEndTime = False, returnEntityID = False, returnFilterOption = False, returnFilterOptionCode = False, returnModifiedTime = False, returnSchoolYearID = False, returnStartTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Area/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every CareerPlanDeclarationTimePeriod in the district.
 
-def deleteArea(AreaID, EntityID = 1):
+	This function returns a dataframe of every CareerPlanDeclarationTimePeriod in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryCareerPlanDeclarationTimePeriod(EntityID = 1, page = 1, pageSize = 100, returnCareerPlanDeclarationTimePeriodID = True, returnCreatedTime = False, returnEndTime = False, returnEntityID = False, returnFilterOption = False, returnFilterOptionCode = False, returnModifiedTime = False, returnSchoolYearID = False, returnStartTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriod/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getCareerPlanDeclarationTimePeriod(CareerPlanDeclarationTimePeriodID, EntityID = 1, returnCareerPlanDeclarationTimePeriodID = True, returnCreatedTime = False, returnEndTime = False, returnEntityID = False, returnFilterOption = False, returnFilterOptionCode = False, returnModifiedTime = False, returnSchoolYearID = False, returnStartTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriod/" + str(CareerPlanDeclarationTimePeriodID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyCareerPlanDeclarationTimePeriod(CareerPlanDeclarationTimePeriodID, EntityID = 1, setEndTime = None, setEntityID = None, setFilterOption = None, setFilterOptionCode = None, setSchoolYearID = None, setStartTime = None, setRelationships = None, returnCareerPlanDeclarationTimePeriodID = True, returnCreatedTime = False, returnEndTime = False, returnEntityID = False, returnFilterOption = False, returnFilterOptionCode = False, returnModifiedTime = False, returnSchoolYearID = False, returnStartTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriod/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriod/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryCareerPlanDeclarationTimePeriodGradeReference(searchConditions = [], EntityID = 1, returnCareerPlanDeclarationTimePeriodGradeReferenceID = False, returnCareerPlanDeclarationTimePeriodID = False, returnCreatedTime = False, returnGradeReferenceID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriod/" + str(CareerPlanDeclarationTimePeriodID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every CareerPlanDeclarationTimePeriodGradeReference in the district.
 
-def createCareerPlanDeclarationTimePeriod(EntityID = 1, setEndTime = None, setEntityID = None, setFilterOption = None, setFilterOptionCode = None, setSchoolYearID = None, setStartTime = None, setRelationships = None, returnCareerPlanDeclarationTimePeriodID = True, returnCreatedTime = False, returnEndTime = False, returnEntityID = False, returnFilterOption = False, returnFilterOptionCode = False, returnModifiedTime = False, returnSchoolYearID = False, returnStartTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every CareerPlanDeclarationTimePeriodGradeReference in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriod/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteCareerPlanDeclarationTimePeriod(CareerPlanDeclarationTimePeriodID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryCareerPlanDeclarationTimePeriodGradeReference(EntityID = 1, page = 1, pageSize = 100, returnCareerPlanDeclarationTimePeriodGradeReferenceID = True, returnCareerPlanDeclarationTimePeriodID = False, returnCreatedTime = False, returnGradeReferenceID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodGradeReference/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodGradeReference/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getCareerPlanDeclarationTimePeriodGradeReference(CareerPlanDeclarationTimePeriodGradeReferenceID, EntityID = 1, returnCareerPlanDeclarationTimePeriodGradeReferenceID = True, returnCareerPlanDeclarationTimePeriodID = False, returnCreatedTime = False, returnGradeReferenceID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodGradeReference/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryCareerPlanDeclarationTimePeriodStudentEntityYear(searchConditions = [], EntityID = 1, returnCareerPlanDeclarationTimePeriodStudentEntityYearID = False, returnCareerPlanDeclarationTimePeriodID = False, returnCreatedTime = False, returnModifiedTime = False, returnStudentEntityYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodGradeReference/" + str(CareerPlanDeclarationTimePeriodGradeReferenceID), verb = "get", return_params_list = return_params_list)
+	"""Get every CareerPlanDeclarationTimePeriodStudentEntityYear in the district.
 
-def modifyCareerPlanDeclarationTimePeriodGradeReference(CareerPlanDeclarationTimePeriodGradeReferenceID, EntityID = 1, setCareerPlanDeclarationTimePeriodID = None, setGradeReferenceID = None, setRelationships = None, returnCareerPlanDeclarationTimePeriodGradeReferenceID = True, returnCareerPlanDeclarationTimePeriodID = False, returnCreatedTime = False, returnGradeReferenceID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every CareerPlanDeclarationTimePeriodStudentEntityYear in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodGradeReference/" + str(CareerPlanDeclarationTimePeriodGradeReferenceID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createCareerPlanDeclarationTimePeriodGradeReference(EntityID = 1, setCareerPlanDeclarationTimePeriodID = None, setGradeReferenceID = None, setRelationships = None, returnCareerPlanDeclarationTimePeriodGradeReferenceID = True, returnCareerPlanDeclarationTimePeriodID = False, returnCreatedTime = False, returnGradeReferenceID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodGradeReference/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteCareerPlanDeclarationTimePeriodGradeReference(CareerPlanDeclarationTimePeriodGradeReferenceID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodStudentEntityYear/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodStudentEntityYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryCareerPlanDeclarationTimePeriodStudentEntityYear(EntityID = 1, page = 1, pageSize = 100, returnCareerPlanDeclarationTimePeriodStudentEntityYearID = True, returnCareerPlanDeclarationTimePeriodID = False, returnCreatedTime = False, returnModifiedTime = False, returnStudentEntityYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryCareerPlanGradeLevel(searchConditions = [], EntityID = 1, returnCareerPlanGradeLevelID = False, returnConfigDistrictID = False, returnCreatedTime = False, returnDisplayName = False, returnGradeLevelID = False, returnIsPriorLevel = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every CareerPlanGradeLevel in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodStudentEntityYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every CareerPlanGradeLevel in the district filtered by search conditions.
 
-def getCareerPlanDeclarationTimePeriodStudentEntityYear(CareerPlanDeclarationTimePeriodStudentEntityYearID, EntityID = 1, returnCareerPlanDeclarationTimePeriodStudentEntityYearID = True, returnCareerPlanDeclarationTimePeriodID = False, returnCreatedTime = False, returnModifiedTime = False, returnStudentEntityYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodStudentEntityYear/" + str(CareerPlanDeclarationTimePeriodStudentEntityYearID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyCareerPlanDeclarationTimePeriodStudentEntityYear(CareerPlanDeclarationTimePeriodStudentEntityYearID, EntityID = 1, setCareerPlanDeclarationTimePeriodID = None, setStudentEntityYearID = None, setRelationships = None, returnCareerPlanDeclarationTimePeriodStudentEntityYearID = True, returnCareerPlanDeclarationTimePeriodID = False, returnCreatedTime = False, returnModifiedTime = False, returnStudentEntityYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodStudentEntityYear/" + str(CareerPlanDeclarationTimePeriodStudentEntityYearID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createCareerPlanDeclarationTimePeriodStudentEntityYear(EntityID = 1, setCareerPlanDeclarationTimePeriodID = None, setStudentEntityYearID = None, setRelationships = None, returnCareerPlanDeclarationTimePeriodStudentEntityYearID = True, returnCareerPlanDeclarationTimePeriodID = False, returnCreatedTime = False, returnModifiedTime = False, returnStudentEntityYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanGradeLevel/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanGradeLevel/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryConfigDistrict(searchConditions = [], EntityID = 1, returnConfigDistrictID = False, returnCourseWorkAppliedByType = False, returnCourseWorkAppliedByTypeCode = False, returnCreatedTime = False, returnDistrictID = False, returnGradingPeriodEndDateLastCheckedDate = False, returnIncludeFutureCredit = False, returnIncludeInProgressCredit = False, returnModifiedTime = False, returnTurnOffAutomaticCalculation = False, returnTurnOffAutomaticEndorsementCalculation = False, returnUsePriorToLastGradeLevel = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanDeclarationTimePeriodStudentEntityYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every ConfigDistrict in the district.
 
-def deleteCareerPlanDeclarationTimePeriodStudentEntityYear(CareerPlanDeclarationTimePeriodStudentEntityYearID, EntityID = 1):
+	This function returns a dataframe of every ConfigDistrict in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryCareerPlanGradeLevel(EntityID = 1, page = 1, pageSize = 100, returnCareerPlanGradeLevelID = True, returnConfigDistrictID = False, returnCreatedTime = False, returnDisplayName = False, returnGradeLevelID = False, returnIsPriorLevel = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanGradeLevel/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getCareerPlanGradeLevel(CareerPlanGradeLevelID, EntityID = 1, returnCareerPlanGradeLevelID = True, returnConfigDistrictID = False, returnCreatedTime = False, returnDisplayName = False, returnGradeLevelID = False, returnIsPriorLevel = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanGradeLevel/" + str(CareerPlanGradeLevelID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyCareerPlanGradeLevel(CareerPlanGradeLevelID, EntityID = 1, setConfigDistrictID = None, setGradeLevelID = None, setIsPriorLevel = None, setRelationships = None, returnCareerPlanGradeLevelID = True, returnConfigDistrictID = False, returnCreatedTime = False, returnDisplayName = False, returnGradeLevelID = False, returnIsPriorLevel = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/ConfigDistrict/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/ConfigDistrict/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryCurriculumCluster(searchConditions = [], EntityID = 1, returnCurriculumClusterID = False, returnCreatedTime = False, returnCurriculumClusterDefaultID = False, returnDescription = False, returnDistrictID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanGradeLevel/" + str(CareerPlanGradeLevelID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every CurriculumCluster in the district.
 
-def createCareerPlanGradeLevel(EntityID = 1, setConfigDistrictID = None, setGradeLevelID = None, setIsPriorLevel = None, setRelationships = None, returnCareerPlanGradeLevelID = True, returnConfigDistrictID = False, returnCreatedTime = False, returnDisplayName = False, returnGradeLevelID = False, returnIsPriorLevel = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every CurriculumCluster in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CareerPlanGradeLevel/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteCareerPlanGradeLevel(CareerPlanGradeLevelID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryConfigDistrict(EntityID = 1, page = 1, pageSize = 100, returnConfigDistrictID = True, returnCourseWorkAppliedByType = False, returnCourseWorkAppliedByTypeCode = False, returnCreatedTime = False, returnDistrictID = False, returnGradingPeriodEndDateLastCheckedDate = False, returnIncludeFutureCredit = False, returnIncludeInProgressCredit = False, returnModifiedTime = False, returnTurnOffAutomaticCalculation = False, returnTurnOffAutomaticEndorsementCalculation = False, returnUsePriorToLastGradeLevel = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/ConfigDistrict/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumCluster/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getConfigDistrict(ConfigDistrictID, EntityID = 1, returnConfigDistrictID = True, returnCourseWorkAppliedByType = False, returnCourseWorkAppliedByTypeCode = False, returnCreatedTime = False, returnDistrictID = False, returnGradingPeriodEndDateLastCheckedDate = False, returnIncludeFutureCredit = False, returnIncludeInProgressCredit = False, returnModifiedTime = False, returnTurnOffAutomaticCalculation = False, returnTurnOffAutomaticEndorsementCalculation = False, returnUsePriorToLastGradeLevel = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumCluster/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryCurriculumClusterCurriculum(searchConditions = [], EntityID = 1, returnCurriculumClusterCurriculumID = False, returnCreatedTime = False, returnCurriculumClusterID = False, returnCurriculumID = False, returnGradYearHigh = False, returnGradYearLow = False, returnIsAdvancedCredit = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/ConfigDistrict/" + str(ConfigDistrictID), verb = "get", return_params_list = return_params_list)
+	"""Get every CurriculumClusterCurriculum in the district.
 
-def modifyConfigDistrict(ConfigDistrictID, EntityID = 1, setCourseWorkAppliedByType = None, setCourseWorkAppliedByTypeCode = None, setDistrictID = None, setGradingPeriodEndDateLastCheckedDate = None, setIncludeFutureCredit = None, setIncludeInProgressCredit = None, setTurnOffAutomaticCalculation = None, setTurnOffAutomaticEndorsementCalculation = None, setUsePriorToLastGradeLevel = None, setRelationships = None, returnConfigDistrictID = True, returnCourseWorkAppliedByType = False, returnCourseWorkAppliedByTypeCode = False, returnCreatedTime = False, returnDistrictID = False, returnGradingPeriodEndDateLastCheckedDate = False, returnIncludeFutureCredit = False, returnIncludeInProgressCredit = False, returnModifiedTime = False, returnTurnOffAutomaticCalculation = False, returnTurnOffAutomaticEndorsementCalculation = False, returnUsePriorToLastGradeLevel = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every CurriculumClusterCurriculum in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/ConfigDistrict/" + str(ConfigDistrictID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createConfigDistrict(EntityID = 1, setCourseWorkAppliedByType = None, setCourseWorkAppliedByTypeCode = None, setDistrictID = None, setGradingPeriodEndDateLastCheckedDate = None, setIncludeFutureCredit = None, setIncludeInProgressCredit = None, setTurnOffAutomaticCalculation = None, setTurnOffAutomaticEndorsementCalculation = None, setUsePriorToLastGradeLevel = None, setRelationships = None, returnConfigDistrictID = True, returnCourseWorkAppliedByType = False, returnCourseWorkAppliedByTypeCode = False, returnCreatedTime = False, returnDistrictID = False, returnGradingPeriodEndDateLastCheckedDate = False, returnIncludeFutureCredit = False, returnIncludeInProgressCredit = False, returnModifiedTime = False, returnTurnOffAutomaticCalculation = False, returnTurnOffAutomaticEndorsementCalculation = False, returnUsePriorToLastGradeLevel = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/ConfigDistrict/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteConfigDistrict(ConfigDistrictID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterCurriculum/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterCurriculum/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryCurriculumCluster(EntityID = 1, page = 1, pageSize = 100, returnCurriculumClusterID = True, returnCreatedTime = False, returnCurriculumClusterDefaultID = False, returnDescription = False, returnDistrictID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryCurriculumClusterDefault(searchConditions = [], EntityID = 1, returnCurriculumClusterDefaultID = False, returnCreatedTime = False, returnDescription = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every CurriculumClusterDefault in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumCluster/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every CurriculumClusterDefault in the district filtered by search conditions.
 
-def getCurriculumCluster(CurriculumClusterID, EntityID = 1, returnCurriculumClusterID = True, returnCreatedTime = False, returnCurriculumClusterDefaultID = False, returnDescription = False, returnDistrictID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumCluster/" + str(CurriculumClusterID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyCurriculumCluster(CurriculumClusterID, EntityID = 1, setCurriculumClusterDefaultID = None, setDescription = None, setDistrictID = None, setRelationships = None, returnCurriculumClusterID = True, returnCreatedTime = False, returnCurriculumClusterDefaultID = False, returnDescription = False, returnDistrictID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumCluster/" + str(CurriculumClusterID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createCurriculumCluster(EntityID = 1, setCurriculumClusterDefaultID = None, setDescription = None, setDistrictID = None, setRelationships = None, returnCurriculumClusterID = True, returnCreatedTime = False, returnCurriculumClusterDefaultID = False, returnDescription = False, returnDistrictID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterDefault/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryCurriculumSubArea(searchConditions = [], EntityID = 1, returnCurriculumSubAreaID = False, returnAllowReuseOfPreviouslyAppliedCredits = False, returnApplicationOrder = False, returnCreatedTime = False, returnCurriculumID = False, returnIsCustomCurriculumSubAreaWithStudentID = False, returnIsGradReqRankGPAWaiver = False, returnMaximumPercentOfCourseCredit = False, returnModifiedTime = False, returnSchoolYearHigh = False, returnSchoolYearLow = False, returnStudentID = False, returnSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumCluster/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every CurriculumSubArea in the district.
 
-def deleteCurriculumCluster(CurriculumClusterID, EntityID = 1):
+	This function returns a dataframe of every CurriculumSubArea in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryCurriculumClusterCurriculum(EntityID = 1, page = 1, pageSize = 100, returnCurriculumClusterCurriculumID = True, returnCreatedTime = False, returnCurriculumClusterID = False, returnCurriculumID = False, returnGradYearHigh = False, returnGradYearLow = False, returnIsAdvancedCredit = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterCurriculum/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getCurriculumClusterCurriculum(CurriculumClusterCurriculumID, EntityID = 1, returnCurriculumClusterCurriculumID = True, returnCreatedTime = False, returnCurriculumClusterID = False, returnCurriculumID = False, returnGradYearHigh = False, returnGradYearLow = False, returnIsAdvancedCredit = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterCurriculum/" + str(CurriculumClusterCurriculumID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyCurriculumClusterCurriculum(CurriculumClusterCurriculumID, EntityID = 1, setCurriculumClusterID = None, setCurriculumID = None, setGradYearHigh = None, setGradYearLow = None, setIsAdvancedCredit = None, setRelationships = None, returnCurriculumClusterCurriculumID = True, returnCreatedTime = False, returnCurriculumClusterID = False, returnCurriculumID = False, returnGradYearHigh = False, returnGradYearLow = False, returnIsAdvancedCredit = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryEndorsement(searchConditions = [], EntityID = 1, returnEndorsementID = False, returnCode = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEndorsementDefaultID = False, returnHasEndorsementOptions = False, returnIsActive = False, returnIsDeclarable = False, returnIsDistrictDefined = False, returnIsPreviouslyLoaded = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterCurriculum/" + str(CurriculumClusterCurriculumID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every Endorsement in the district.
 
-def createCurriculumClusterCurriculum(EntityID = 1, setCurriculumClusterID = None, setCurriculumID = None, setGradYearHigh = None, setGradYearLow = None, setIsAdvancedCredit = None, setRelationships = None, returnCurriculumClusterCurriculumID = True, returnCreatedTime = False, returnCurriculumClusterID = False, returnCurriculumID = False, returnGradYearHigh = False, returnGradYearLow = False, returnIsAdvancedCredit = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every Endorsement in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterCurriculum/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteCurriculumClusterCurriculum(CurriculumClusterCurriculumID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryCurriculumClusterDefault(EntityID = 1, page = 1, pageSize = 100, returnCurriculumClusterDefaultID = True, returnCreatedTime = False, returnDescription = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Endorsement/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getCurriculumClusterDefault(CurriculumClusterDefaultID, EntityID = 1, returnCurriculumClusterDefaultID = True, returnCreatedTime = False, returnDescription = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Endorsement/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryEndorsementDeclarationTimePeriod(searchConditions = [], EntityID = 1, returnEndorsementDeclarationTimePeriodID = False, returnCreatedTime = False, returnEndTime = False, returnEntityID = False, returnFilterOption = False, returnFilterOptionCode = False, returnModifiedTime = False, returnSchoolYearID = False, returnStartTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterDefault/" + str(CurriculumClusterDefaultID), verb = "get", return_params_list = return_params_list)
+	"""Get every EndorsementDeclarationTimePeriod in the district.
 
-def modifyCurriculumClusterDefault(CurriculumClusterDefaultID, EntityID = 1, setDescription = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnCurriculumClusterDefaultID = True, returnCreatedTime = False, returnDescription = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EndorsementDeclarationTimePeriod in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterDefault/" + str(CurriculumClusterDefaultID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createCurriculumClusterDefault(EntityID = 1, setDescription = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnCurriculumClusterDefaultID = True, returnCreatedTime = False, returnDescription = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumClusterDefault/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteCurriculumClusterDefault(CurriculumClusterDefaultID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriod/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriod/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryCurriculumSubArea(EntityID = 1, page = 1, pageSize = 100, returnCurriculumSubAreaID = True, returnAllowReuseOfPreviouslyAppliedCredits = False, returnApplicationOrder = False, returnCreatedTime = False, returnCurriculumID = False, returnIsCustomCurriculumSubAreaWithStudentID = False, returnIsGradReqRankGPAWaiver = False, returnMaximumPercentOfCourseCredit = False, returnModifiedTime = False, returnSchoolYearHigh = False, returnSchoolYearLow = False, returnStudentID = False, returnSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryEndorsementDeclarationTimePeriodGradeReference(searchConditions = [], EntityID = 1, returnEndorsementDeclarationTimePeriodGradeReferenceID = False, returnCreatedTime = False, returnEndorsementDeclarationTimePeriodID = False, returnGradeReferenceID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every EndorsementDeclarationTimePeriodGradeReference in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every EndorsementDeclarationTimePeriodGradeReference in the district filtered by search conditions.
 
-def getCurriculumSubArea(CurriculumSubAreaID, EntityID = 1, returnCurriculumSubAreaID = True, returnAllowReuseOfPreviouslyAppliedCredits = False, returnApplicationOrder = False, returnCreatedTime = False, returnCurriculumID = False, returnIsCustomCurriculumSubAreaWithStudentID = False, returnIsGradReqRankGPAWaiver = False, returnMaximumPercentOfCourseCredit = False, returnModifiedTime = False, returnSchoolYearHigh = False, returnSchoolYearLow = False, returnStudentID = False, returnSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumSubArea/" + str(CurriculumSubAreaID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyCurriculumSubArea(CurriculumSubAreaID, EntityID = 1, setAllowReuseOfPreviouslyAppliedCredits = None, setApplicationOrder = None, setCurriculumID = None, setIsGradReqRankGPAWaiver = None, setMaximumPercentOfCourseCredit = None, setSchoolYearHigh = None, setSchoolYearLow = None, setStudentID = None, setSubAreaID = None, setRelationships = None, returnCurriculumSubAreaID = True, returnAllowReuseOfPreviouslyAppliedCredits = False, returnApplicationOrder = False, returnCreatedTime = False, returnCurriculumID = False, returnIsCustomCurriculumSubAreaWithStudentID = False, returnIsGradReqRankGPAWaiver = False, returnMaximumPercentOfCourseCredit = False, returnModifiedTime = False, returnSchoolYearHigh = False, returnSchoolYearLow = False, returnStudentID = False, returnSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumSubArea/" + str(CurriculumSubAreaID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createCurriculumSubArea(EntityID = 1, setAllowReuseOfPreviouslyAppliedCredits = None, setApplicationOrder = None, setCurriculumID = None, setIsGradReqRankGPAWaiver = None, setMaximumPercentOfCourseCredit = None, setSchoolYearHigh = None, setSchoolYearLow = None, setStudentID = None, setSubAreaID = None, setRelationships = None, returnCurriculumSubAreaID = True, returnAllowReuseOfPreviouslyAppliedCredits = False, returnApplicationOrder = False, returnCreatedTime = False, returnCurriculumID = False, returnIsCustomCurriculumSubAreaWithStudentID = False, returnIsGradReqRankGPAWaiver = False, returnMaximumPercentOfCourseCredit = False, returnModifiedTime = False, returnSchoolYearHigh = False, returnSchoolYearLow = False, returnStudentID = False, returnSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodGradeReference/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodGradeReference/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryEndorsementDeclarationTimePeriodStudentEntityYear(searchConditions = [], EntityID = 1, returnEndorsementDeclarationTimePeriodStudentEntityYearID = False, returnCreatedTime = False, returnEndorsementDeclarationTimePeriodID = False, returnModifiedTime = False, returnStudentEntityYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/CurriculumSubArea/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every EndorsementDeclarationTimePeriodStudentEntityYear in the district.
 
-def deleteCurriculumSubArea(CurriculumSubAreaID, EntityID = 1):
+	This function returns a dataframe of every EndorsementDeclarationTimePeriodStudentEntityYear in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryEndorsement(EntityID = 1, page = 1, pageSize = 100, returnEndorsementID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEndorsementDefaultID = False, returnHasEndorsementOptions = False, returnIsActive = False, returnIsDeclarable = False, returnIsPreviouslyLoaded = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Endorsement/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getEndorsement(EndorsementID, EntityID = 1, returnEndorsementID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEndorsementDefaultID = False, returnHasEndorsementOptions = False, returnIsActive = False, returnIsDeclarable = False, returnIsPreviouslyLoaded = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Endorsement/" + str(EndorsementID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyEndorsement(EndorsementID, EntityID = 1, setCode = None, setDescription = None, setDistrictID = None, setEndorsementDefaultID = None, setIsActive = None, setIsDeclarable = None, setIsPreviouslyLoaded = None, setPrintOnTranscript = None, setRelationships = None, returnEndorsementID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEndorsementDefaultID = False, returnHasEndorsementOptions = False, returnIsActive = False, returnIsDeclarable = False, returnIsPreviouslyLoaded = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodStudentEntityYear/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodStudentEntityYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryEndorsementDefault(searchConditions = [], EntityID = 1, returnEndorsementDefaultID = False, returnCode = False, returnCreatedTime = False, returnDescription = False, returnIsActive = False, returnIsDeclarable = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Endorsement/" + str(EndorsementID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every EndorsementDefault in the district.
 
-def createEndorsement(EntityID = 1, setCode = None, setDescription = None, setDistrictID = None, setEndorsementDefaultID = None, setIsActive = None, setIsDeclarable = None, setIsPreviouslyLoaded = None, setPrintOnTranscript = None, setRelationships = None, returnEndorsementID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEndorsementDefaultID = False, returnHasEndorsementOptions = False, returnIsActive = False, returnIsDeclarable = False, returnIsPreviouslyLoaded = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EndorsementDefault in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Endorsement/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteEndorsement(EndorsementID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryEndorsementDeclarationTimePeriod(EntityID = 1, page = 1, pageSize = 100, returnEndorsementDeclarationTimePeriodID = True, returnCreatedTime = False, returnEndTime = False, returnEntityID = False, returnFilterOption = False, returnFilterOptionCode = False, returnModifiedTime = False, returnSchoolYearID = False, returnStartTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriod/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDefault/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getEndorsementDeclarationTimePeriod(EndorsementDeclarationTimePeriodID, EntityID = 1, returnEndorsementDeclarationTimePeriodID = True, returnCreatedTime = False, returnEndTime = False, returnEntityID = False, returnFilterOption = False, returnFilterOptionCode = False, returnModifiedTime = False, returnSchoolYearID = False, returnStartTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryEndorsementOption(searchConditions = [], EntityID = 1, returnEndorsementOptionID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnEndorsementID = False, returnEndorsementOptionDefaultID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnMustCompleteGradPlan = False, returnOrderNumber = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriod/" + str(EndorsementDeclarationTimePeriodID), verb = "get", return_params_list = return_params_list)
+	"""Get every EndorsementOption in the district.
 
-def modifyEndorsementDeclarationTimePeriod(EndorsementDeclarationTimePeriodID, EntityID = 1, setEndTime = None, setEntityID = None, setFilterOption = None, setFilterOptionCode = None, setSchoolYearID = None, setStartTime = None, setRelationships = None, returnEndorsementDeclarationTimePeriodID = True, returnCreatedTime = False, returnEndTime = False, returnEntityID = False, returnFilterOption = False, returnFilterOptionCode = False, returnModifiedTime = False, returnSchoolYearID = False, returnStartTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EndorsementOption in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriod/" + str(EndorsementDeclarationTimePeriodID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createEndorsementDeclarationTimePeriod(EntityID = 1, setEndTime = None, setEntityID = None, setFilterOption = None, setFilterOptionCode = None, setSchoolYearID = None, setStartTime = None, setRelationships = None, returnEndorsementDeclarationTimePeriodID = True, returnCreatedTime = False, returnEndTime = False, returnEntityID = False, returnFilterOption = False, returnFilterOptionCode = False, returnModifiedTime = False, returnSchoolYearID = False, returnStartTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriod/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteEndorsementDeclarationTimePeriod(EndorsementDeclarationTimePeriodID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOption/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOption/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryEndorsementDeclarationTimePeriodGradeReference(EntityID = 1, page = 1, pageSize = 100, returnEndorsementDeclarationTimePeriodGradeReferenceID = True, returnCreatedTime = False, returnEndorsementDeclarationTimePeriodID = False, returnGradeReferenceID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryEndorsementOptionDefault(searchConditions = [], EntityID = 1, returnEndorsementOptionDefaultID = False, returnCode = False, returnCreatedTime = False, returnDescription = False, returnEndorsementDefaultID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnMustCompleteGradPlan = False, returnOrderNumber = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every EndorsementOptionDefault in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodGradeReference/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every EndorsementOptionDefault in the district filtered by search conditions.
 
-def getEndorsementDeclarationTimePeriodGradeReference(EndorsementDeclarationTimePeriodGradeReferenceID, EntityID = 1, returnEndorsementDeclarationTimePeriodGradeReferenceID = True, returnCreatedTime = False, returnEndorsementDeclarationTimePeriodID = False, returnGradeReferenceID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodGradeReference/" + str(EndorsementDeclarationTimePeriodGradeReferenceID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyEndorsementDeclarationTimePeriodGradeReference(EndorsementDeclarationTimePeriodGradeReferenceID, EntityID = 1, setEndorsementDeclarationTimePeriodID = None, setGradeReferenceID = None, setRelationships = None, returnEndorsementDeclarationTimePeriodGradeReferenceID = True, returnCreatedTime = False, returnEndorsementDeclarationTimePeriodID = False, returnGradeReferenceID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodGradeReference/" + str(EndorsementDeclarationTimePeriodGradeReferenceID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createEndorsementDeclarationTimePeriodGradeReference(EntityID = 1, setEndorsementDeclarationTimePeriodID = None, setGradeReferenceID = None, setRelationships = None, returnEndorsementDeclarationTimePeriodGradeReferenceID = True, returnCreatedTime = False, returnEndorsementDeclarationTimePeriodID = False, returnGradeReferenceID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOptionDefault/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOptionDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryEndorsementRequirement(searchConditions = [], EntityID = 1, returnEndorsementRequirementID = False, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnDescription = False, returnEndorsementOptionID = False, returnEndorsementRequirementDefaultID = False, returnMaximumClusterLimit = False, returnMinimumClusterLimit = False, returnModifiedTime = False, returnMustFulfillAllCurriculumClusters = False, returnOrderNumber = False, returnOverallCreditsRequired = False, returnRequirementAssessmentType = False, returnRequirementAssessmentTypeCode = False, returnRequirementType = False, returnRequirementTypeCode = False, returnUseMaximumClusterLimit = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodGradeReference/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every EndorsementRequirement in the district.
 
-def deleteEndorsementDeclarationTimePeriodGradeReference(EndorsementDeclarationTimePeriodGradeReferenceID, EntityID = 1):
+	This function returns a dataframe of every EndorsementRequirement in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryEndorsementDeclarationTimePeriodStudentEntityYear(EntityID = 1, page = 1, pageSize = 100, returnEndorsementDeclarationTimePeriodStudentEntityYearID = True, returnCreatedTime = False, returnEndorsementDeclarationTimePeriodID = False, returnModifiedTime = False, returnStudentEntityYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodStudentEntityYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getEndorsementDeclarationTimePeriodStudentEntityYear(EndorsementDeclarationTimePeriodStudentEntityYearID, EntityID = 1, returnEndorsementDeclarationTimePeriodStudentEntityYearID = True, returnCreatedTime = False, returnEndorsementDeclarationTimePeriodID = False, returnModifiedTime = False, returnStudentEntityYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodStudentEntityYear/" + str(EndorsementDeclarationTimePeriodStudentEntityYearID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyEndorsementDeclarationTimePeriodStudentEntityYear(EndorsementDeclarationTimePeriodStudentEntityYearID, EntityID = 1, setEndorsementDeclarationTimePeriodID = None, setStudentEntityYearID = None, setRelationships = None, returnEndorsementDeclarationTimePeriodStudentEntityYearID = True, returnCreatedTime = False, returnEndorsementDeclarationTimePeriodID = False, returnModifiedTime = False, returnStudentEntityYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirement/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirement/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryEndorsementRequirementAssessment(searchConditions = [], EntityID = 1, returnEndorsementRequirementAssessmentID = False, returnClusterType = False, returnClusterTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentDefaultID = False, returnEndorsementRequirementID = False, returnModifiedTime = False, returnTestType = False, returnTestTypeCode = False, returnTestVersion = False, returnTestVersionCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodStudentEntityYear/" + str(EndorsementDeclarationTimePeriodStudentEntityYearID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every EndorsementRequirementAssessment in the district.
 
-def createEndorsementDeclarationTimePeriodStudentEntityYear(EntityID = 1, setEndorsementDeclarationTimePeriodID = None, setStudentEntityYearID = None, setRelationships = None, returnEndorsementDeclarationTimePeriodStudentEntityYearID = True, returnCreatedTime = False, returnEndorsementDeclarationTimePeriodID = False, returnModifiedTime = False, returnStudentEntityYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EndorsementRequirementAssessment in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDeclarationTimePeriodStudentEntityYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteEndorsementDeclarationTimePeriodStudentEntityYear(EndorsementDeclarationTimePeriodStudentEntityYearID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryEndorsementDefault(EntityID = 1, page = 1, pageSize = 100, returnEndorsementDefaultID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnIsActive = False, returnIsDeclarable = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessment/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getEndorsementDefault(EndorsementDefaultID, EntityID = 1, returnEndorsementDefaultID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnIsActive = False, returnIsDeclarable = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessment/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryEndorsementRequirementAssessmentCluster(searchConditions = [], EntityID = 1, returnEndorsementRequirementAssessmentClusterID = False, returnClusterScoreType = False, returnClusterScoreTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterDefaultID = False, returnEndorsementRequirementAssessmentID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDefault/" + str(EndorsementDefaultID), verb = "get", return_params_list = return_params_list)
+	"""Get every EndorsementRequirementAssessmentCluster in the district.
 
-def modifyEndorsementDefault(EndorsementDefaultID, EntityID = 1, setCode = None, setDescription = None, setIsActive = None, setIsDeclarable = None, setPrintOnTranscript = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnEndorsementDefaultID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnIsActive = False, returnIsDeclarable = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EndorsementRequirementAssessmentCluster in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDefault/" + str(EndorsementDefaultID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createEndorsementDefault(EntityID = 1, setCode = None, setDescription = None, setIsActive = None, setIsDeclarable = None, setPrintOnTranscript = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnEndorsementDefaultID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnIsActive = False, returnIsDeclarable = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementDefault/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteEndorsementDefault(EndorsementDefaultID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentCluster/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentCluster/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryEndorsementOption(EntityID = 1, page = 1, pageSize = 100, returnEndorsementOptionID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnEndorsementID = False, returnEndorsementOptionDefaultID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnMustCompleteGradPlan = False, returnOrderNumber = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryEndorsementRequirementAssessmentClusterDefault(searchConditions = [], EntityID = 1, returnEndorsementRequirementAssessmentClusterDefaultID = False, returnClusterScoreType = False, returnClusterScoreTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every EndorsementRequirementAssessmentClusterDefault in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOption/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every EndorsementRequirementAssessmentClusterDefault in the district filtered by search conditions.
 
-def getEndorsementOption(EndorsementOptionID, EntityID = 1, returnEndorsementOptionID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnEndorsementID = False, returnEndorsementOptionDefaultID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnMustCompleteGradPlan = False, returnOrderNumber = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOption/" + str(EndorsementOptionID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyEndorsementOption(EndorsementOptionID, EntityID = 1, setCode = None, setDescription = None, setEndorsementID = None, setEndorsementOptionDefaultID = None, setGradYearHigh = None, setGradYearLow = None, setMustCompleteGradPlan = None, setOrderNumber = None, setRelationships = None, returnEndorsementOptionID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnEndorsementID = False, returnEndorsementOptionDefaultID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnMustCompleteGradPlan = False, returnOrderNumber = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOption/" + str(EndorsementOptionID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createEndorsementOption(EntityID = 1, setCode = None, setDescription = None, setEndorsementID = None, setEndorsementOptionDefaultID = None, setGradYearHigh = None, setGradYearLow = None, setMustCompleteGradPlan = None, setOrderNumber = None, setRelationships = None, returnEndorsementOptionID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnEndorsementID = False, returnEndorsementOptionDefaultID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnMustCompleteGradPlan = False, returnOrderNumber = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentClusterDefault/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentClusterDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryEndorsementRequirementAssessmentDefault(searchConditions = [], EntityID = 1, returnEndorsementRequirementAssessmentDefaultID = False, returnClusterType = False, returnClusterTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnTestType = False, returnTestTypeCode = False, returnTestVersion = False, returnTestVersionCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOption/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every EndorsementRequirementAssessmentDefault in the district.
 
-def deleteEndorsementOption(EndorsementOptionID, EntityID = 1):
+	This function returns a dataframe of every EndorsementRequirementAssessmentDefault in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryEndorsementOptionDefault(EntityID = 1, page = 1, pageSize = 100, returnEndorsementOptionDefaultID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnEndorsementDefaultID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnMustCompleteGradPlan = False, returnOrderNumber = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOptionDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getEndorsementOptionDefault(EndorsementOptionDefaultID, EntityID = 1, returnEndorsementOptionDefaultID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnEndorsementDefaultID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnMustCompleteGradPlan = False, returnOrderNumber = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOptionDefault/" + str(EndorsementOptionDefaultID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyEndorsementOptionDefault(EndorsementOptionDefaultID, EntityID = 1, setCode = None, setDescription = None, setEndorsementDefaultID = None, setGradYearHigh = None, setGradYearLow = None, setMustCompleteGradPlan = None, setOrderNumber = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnEndorsementOptionDefaultID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnEndorsementDefaultID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnMustCompleteGradPlan = False, returnOrderNumber = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentDefault/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryEndorsementRequirementAssessmentScore(searchConditions = [], EntityID = 1, returnEndorsementRequirementAssessmentScoreID = False, returnAssessmentScoreColumn = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterID = False, returnEndorsementRequirementAssessmentScoreDefaultID = False, returnModifiedTime = False, returnPassingScore = False, returnPassingScoreHigh = False, returnPassingScoreLow = False, returnScoreLocation = False, returnScoreType = False, returnScoreTypeCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOptionDefault/" + str(EndorsementOptionDefaultID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every EndorsementRequirementAssessmentScore in the district.
 
-def createEndorsementOptionDefault(EntityID = 1, setCode = None, setDescription = None, setEndorsementDefaultID = None, setGradYearHigh = None, setGradYearLow = None, setMustCompleteGradPlan = None, setOrderNumber = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnEndorsementOptionDefaultID = True, returnCode = False, returnCreatedTime = False, returnDescription = False, returnEndorsementDefaultID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnMustCompleteGradPlan = False, returnOrderNumber = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EndorsementRequirementAssessmentScore in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementOptionDefault/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteEndorsementOptionDefault(EndorsementOptionDefaultID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryEndorsementRequirement(EntityID = 1, page = 1, pageSize = 100, returnEndorsementRequirementID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnDescription = False, returnEndorsementOptionID = False, returnEndorsementRequirementDefaultID = False, returnMaximumClusterLimit = False, returnMinimumClusterLimit = False, returnModifiedTime = False, returnMustFulfillAllCurriculumClusters = False, returnOrderNumber = False, returnOverallCreditsRequired = False, returnRequirementAssessmentType = False, returnRequirementAssessmentTypeCode = False, returnRequirementType = False, returnRequirementTypeCode = False, returnUseMaximumClusterLimit = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirement/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScore/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getEndorsementRequirement(EndorsementRequirementID, EntityID = 1, returnEndorsementRequirementID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnDescription = False, returnEndorsementOptionID = False, returnEndorsementRequirementDefaultID = False, returnMaximumClusterLimit = False, returnMinimumClusterLimit = False, returnModifiedTime = False, returnMustFulfillAllCurriculumClusters = False, returnOrderNumber = False, returnOverallCreditsRequired = False, returnRequirementAssessmentType = False, returnRequirementAssessmentTypeCode = False, returnRequirementType = False, returnRequirementTypeCode = False, returnUseMaximumClusterLimit = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScore/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryEndorsementRequirementAssessmentScoreDefault(searchConditions = [], EntityID = 1, returnEndorsementRequirementAssessmentScoreDefaultID = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterDefaultID = False, returnModifiedTime = False, returnPassingScore = False, returnPassingScoreHigh = False, returnPassingScoreLow = False, returnScoreLocation = False, returnScoreType = False, returnScoreTypeCode = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirement/" + str(EndorsementRequirementID), verb = "get", return_params_list = return_params_list)
+	"""Get every EndorsementRequirementAssessmentScoreDefault in the district.
 
-def modifyEndorsementRequirement(EndorsementRequirementID, EntityID = 1, setAdvancedCreditsRequired = None, setDescription = None, setEndorsementOptionID = None, setEndorsementRequirementDefaultID = None, setMaximumClusterLimit = None, setMinimumClusterLimit = None, setMustFulfillAllCurriculumClusters = None, setOrderNumber = None, setOverallCreditsRequired = None, setRequirementAssessmentType = None, setRequirementAssessmentTypeCode = None, setRequirementType = None, setRequirementTypeCode = None, setUseMaximumClusterLimit = None, setRelationships = None, returnEndorsementRequirementID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnDescription = False, returnEndorsementOptionID = False, returnEndorsementRequirementDefaultID = False, returnMaximumClusterLimit = False, returnMinimumClusterLimit = False, returnModifiedTime = False, returnMustFulfillAllCurriculumClusters = False, returnOrderNumber = False, returnOverallCreditsRequired = False, returnRequirementAssessmentType = False, returnRequirementAssessmentTypeCode = False, returnRequirementType = False, returnRequirementTypeCode = False, returnUseMaximumClusterLimit = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EndorsementRequirementAssessmentScoreDefault in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirement/" + str(EndorsementRequirementID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createEndorsementRequirement(EntityID = 1, setAdvancedCreditsRequired = None, setDescription = None, setEndorsementOptionID = None, setEndorsementRequirementDefaultID = None, setMaximumClusterLimit = None, setMinimumClusterLimit = None, setMustFulfillAllCurriculumClusters = None, setOrderNumber = None, setOverallCreditsRequired = None, setRequirementAssessmentType = None, setRequirementAssessmentTypeCode = None, setRequirementType = None, setRequirementTypeCode = None, setUseMaximumClusterLimit = None, setRelationships = None, returnEndorsementRequirementID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnDescription = False, returnEndorsementOptionID = False, returnEndorsementRequirementDefaultID = False, returnMaximumClusterLimit = False, returnMinimumClusterLimit = False, returnModifiedTime = False, returnMustFulfillAllCurriculumClusters = False, returnOrderNumber = False, returnOverallCreditsRequired = False, returnRequirementAssessmentType = False, returnRequirementAssessmentTypeCode = False, returnRequirementType = False, returnRequirementTypeCode = False, returnUseMaximumClusterLimit = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirement/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteEndorsementRequirement(EndorsementRequirementID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScoreDefault/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScoreDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryEndorsementRequirementAssessment(EntityID = 1, page = 1, pageSize = 100, returnEndorsementRequirementAssessmentID = True, returnClusterType = False, returnClusterTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentDefaultID = False, returnEndorsementRequirementID = False, returnModifiedTime = False, returnTestType = False, returnTestTypeCode = False, returnTestVersion = False, returnTestVersionCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryEndorsementRequirementCurriculum(searchConditions = [], EntityID = 1, returnEndorsementRequirementCurriculumID = False, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnCreditsRequired = False, returnCurriculumClusterID = False, returnEndorsementRequirementCurriculumDefaultID = False, returnEndorsementRequirementID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every EndorsementRequirementCurriculum in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessment/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every EndorsementRequirementCurriculum in the district filtered by search conditions.
 
-def getEndorsementRequirementAssessment(EndorsementRequirementAssessmentID, EntityID = 1, returnEndorsementRequirementAssessmentID = True, returnClusterType = False, returnClusterTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentDefaultID = False, returnEndorsementRequirementID = False, returnModifiedTime = False, returnTestType = False, returnTestTypeCode = False, returnTestVersion = False, returnTestVersionCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessment/" + str(EndorsementRequirementAssessmentID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyEndorsementRequirementAssessment(EndorsementRequirementAssessmentID, EntityID = 1, setClusterType = None, setClusterTypeCode = None, setEndorsementRequirementAssessmentDefaultID = None, setEndorsementRequirementID = None, setTestType = None, setTestTypeCode = None, setTestVersion = None, setTestVersionCode = None, setRelationships = None, returnEndorsementRequirementAssessmentID = True, returnClusterType = False, returnClusterTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentDefaultID = False, returnEndorsementRequirementID = False, returnModifiedTime = False, returnTestType = False, returnTestTypeCode = False, returnTestVersion = False, returnTestVersionCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessment/" + str(EndorsementRequirementAssessmentID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createEndorsementRequirementAssessment(EntityID = 1, setClusterType = None, setClusterTypeCode = None, setEndorsementRequirementAssessmentDefaultID = None, setEndorsementRequirementID = None, setTestType = None, setTestTypeCode = None, setTestVersion = None, setTestVersionCode = None, setRelationships = None, returnEndorsementRequirementAssessmentID = True, returnClusterType = False, returnClusterTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentDefaultID = False, returnEndorsementRequirementID = False, returnModifiedTime = False, returnTestType = False, returnTestTypeCode = False, returnTestVersion = False, returnTestVersionCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculum/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculum/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryEndorsementRequirementCurriculumDefault(searchConditions = [], EntityID = 1, returnEndorsementRequirementCurriculumDefaultID = False, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnCreditsRequired = False, returnCurriculumClusterDefaultID = False, returnEndorsementRequirementDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessment/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every EndorsementRequirementCurriculumDefault in the district.
 
-def deleteEndorsementRequirementAssessment(EndorsementRequirementAssessmentID, EntityID = 1):
+	This function returns a dataframe of every EndorsementRequirementCurriculumDefault in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryEndorsementRequirementAssessmentCluster(EntityID = 1, page = 1, pageSize = 100, returnEndorsementRequirementAssessmentClusterID = True, returnClusterScoreType = False, returnClusterScoreTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterDefaultID = False, returnEndorsementRequirementAssessmentID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentCluster/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getEndorsementRequirementAssessmentCluster(EndorsementRequirementAssessmentClusterID, EntityID = 1, returnEndorsementRequirementAssessmentClusterID = True, returnClusterScoreType = False, returnClusterScoreTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterDefaultID = False, returnEndorsementRequirementAssessmentID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentCluster/" + str(EndorsementRequirementAssessmentClusterID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyEndorsementRequirementAssessmentCluster(EndorsementRequirementAssessmentClusterID, EntityID = 1, setClusterScoreType = None, setClusterScoreTypeCode = None, setEndorsementRequirementAssessmentClusterDefaultID = None, setEndorsementRequirementAssessmentID = None, setRelationships = None, returnEndorsementRequirementAssessmentClusterID = True, returnClusterScoreType = False, returnClusterScoreTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterDefaultID = False, returnEndorsementRequirementAssessmentID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculumDefault/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculumDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryEndorsementRequirementDefault(searchConditions = [], EntityID = 1, returnEndorsementRequirementDefaultID = False, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnDescription = False, returnEndorsementOptionDefaultID = False, returnMaximumClusterLimit = False, returnMinimumClusterLimit = False, returnModifiedTime = False, returnMustFulfillAllCurriculumClusters = False, returnOrderNumber = False, returnOverallCreditsRequired = False, returnRequirementAssessmentType = False, returnRequirementAssessmentTypeCode = False, returnRequirementType = False, returnRequirementTypeCode = False, returnSkywardHash = False, returnSkywardID = False, returnUseMaximumClusterLimit = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentCluster/" + str(EndorsementRequirementAssessmentClusterID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every EndorsementRequirementDefault in the district.
 
-def createEndorsementRequirementAssessmentCluster(EntityID = 1, setClusterScoreType = None, setClusterScoreTypeCode = None, setEndorsementRequirementAssessmentClusterDefaultID = None, setEndorsementRequirementAssessmentID = None, setRelationships = None, returnEndorsementRequirementAssessmentClusterID = True, returnClusterScoreType = False, returnClusterScoreTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterDefaultID = False, returnEndorsementRequirementAssessmentID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EndorsementRequirementDefault in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentCluster/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteEndorsementRequirementAssessmentCluster(EndorsementRequirementAssessmentClusterID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryEndorsementRequirementAssessmentClusterDefault(EntityID = 1, page = 1, pageSize = 100, returnEndorsementRequirementAssessmentClusterDefaultID = True, returnClusterScoreType = False, returnClusterScoreTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentClusterDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementDefault/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getEndorsementRequirementAssessmentClusterDefault(EndorsementRequirementAssessmentClusterDefaultID, EntityID = 1, returnEndorsementRequirementAssessmentClusterDefaultID = True, returnClusterScoreType = False, returnClusterScoreTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryPlan(searchConditions = [], EntityID = 1, returnPlanID = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEarnedCreditsMethodIDDefaultOverride = False, returnEdFiGraduationPlanID = False, returnGeneralElectiveSubAreaID = False, returnGradYearHigh = False, returnGradYearLow = False, returnIsNotSystemPlan = False, returnIsSystemPlan = False, returnModifiedTime = False, returnNonElectiveCreditTotal = False, returnNumberOfSubAreasForCurriculum = False, returnSkywardHash = False, returnSkywardID = False, returnTotalCredits = False, returnTotalYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentClusterDefault/" + str(EndorsementRequirementAssessmentClusterDefaultID), verb = "get", return_params_list = return_params_list)
+	"""Get every Plan in the district.
 
-def modifyEndorsementRequirementAssessmentClusterDefault(EndorsementRequirementAssessmentClusterDefaultID, EntityID = 1, setClusterScoreType = None, setClusterScoreTypeCode = None, setEndorsementRequirementAssessmentDefaultID = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnEndorsementRequirementAssessmentClusterDefaultID = True, returnClusterScoreType = False, returnClusterScoreTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every Plan in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentClusterDefault/" + str(EndorsementRequirementAssessmentClusterDefaultID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createEndorsementRequirementAssessmentClusterDefault(EntityID = 1, setClusterScoreType = None, setClusterScoreTypeCode = None, setEndorsementRequirementAssessmentDefaultID = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnEndorsementRequirementAssessmentClusterDefaultID = True, returnClusterScoreType = False, returnClusterScoreTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentClusterDefault/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteEndorsementRequirementAssessmentClusterDefault(EndorsementRequirementAssessmentClusterDefaultID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Plan/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Plan/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryEndorsementRequirementAssessmentDefault(EntityID = 1, page = 1, pageSize = 100, returnEndorsementRequirementAssessmentDefaultID = True, returnClusterType = False, returnClusterTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnTestType = False, returnTestTypeCode = False, returnTestVersion = False, returnTestVersionCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryPlanDefault(searchConditions = [], EntityID = 1, returnPlanDefaultID = False, returnCreatedTime = False, returnEntityID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every PlanDefault in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every PlanDefault in the district filtered by search conditions.
 
-def getEndorsementRequirementAssessmentDefault(EndorsementRequirementAssessmentDefaultID, EntityID = 1, returnEndorsementRequirementAssessmentDefaultID = True, returnClusterType = False, returnClusterTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnTestType = False, returnTestTypeCode = False, returnTestVersion = False, returnTestVersionCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentDefault/" + str(EndorsementRequirementAssessmentDefaultID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyEndorsementRequirementAssessmentDefault(EndorsementRequirementAssessmentDefaultID, EntityID = 1, setClusterType = None, setClusterTypeCode = None, setEndorsementRequirementDefaultID = None, setSkywardHash = None, setSkywardID = None, setTestType = None, setTestTypeCode = None, setTestVersion = None, setTestVersionCode = None, setRelationships = None, returnEndorsementRequirementAssessmentDefaultID = True, returnClusterType = False, returnClusterTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnTestType = False, returnTestTypeCode = False, returnTestVersion = False, returnTestVersionCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentDefault/" + str(EndorsementRequirementAssessmentDefaultID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createEndorsementRequirementAssessmentDefault(EntityID = 1, setClusterType = None, setClusterTypeCode = None, setEndorsementRequirementDefaultID = None, setSkywardHash = None, setSkywardID = None, setTestType = None, setTestTypeCode = None, setTestVersion = None, setTestVersionCode = None, setRelationships = None, returnEndorsementRequirementAssessmentDefaultID = True, returnClusterType = False, returnClusterTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnTestType = False, returnTestTypeCode = False, returnTestVersion = False, returnTestVersionCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanDefault/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryPlanEntity(searchConditions = [], EntityID = 1, returnPlanEntityID = False, returnCreatedTime = False, returnEntityID = False, returnGradYearHigh = False, returnGradYearLow = False, returnGradYearRange = False, returnModifiedTime = False, returnPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentDefault/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every PlanEntity in the district.
 
-def deleteEndorsementRequirementAssessmentDefault(EndorsementRequirementAssessmentDefaultID, EntityID = 1):
+	This function returns a dataframe of every PlanEntity in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryEndorsementRequirementAssessmentScore(EntityID = 1, page = 1, pageSize = 100, returnEndorsementRequirementAssessmentScoreID = True, returnAssessmentScoreColumn = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterID = False, returnEndorsementRequirementAssessmentScoreDefaultID = False, returnModifiedTime = False, returnPassingScore = False, returnPassingScoreHigh = False, returnPassingScoreLow = False, returnScoreLocation = False, returnScoreType = False, returnScoreTypeCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScore/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getEndorsementRequirementAssessmentScore(EndorsementRequirementAssessmentScoreID, EntityID = 1, returnEndorsementRequirementAssessmentScoreID = True, returnAssessmentScoreColumn = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterID = False, returnEndorsementRequirementAssessmentScoreDefaultID = False, returnModifiedTime = False, returnPassingScore = False, returnPassingScoreHigh = False, returnPassingScoreLow = False, returnScoreLocation = False, returnScoreType = False, returnScoreTypeCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScore/" + str(EndorsementRequirementAssessmentScoreID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyEndorsementRequirementAssessmentScore(EndorsementRequirementAssessmentScoreID, EntityID = 1, setEndorsementRequirementAssessmentClusterID = None, setEndorsementRequirementAssessmentScoreDefaultID = None, setPassingScore = None, setPassingScoreHigh = None, setPassingScoreLow = None, setScoreLocation = None, setScoreType = None, setScoreTypeCode = None, setRelationships = None, returnEndorsementRequirementAssessmentScoreID = True, returnAssessmentScoreColumn = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterID = False, returnEndorsementRequirementAssessmentScoreDefaultID = False, returnModifiedTime = False, returnPassingScore = False, returnPassingScoreHigh = False, returnPassingScoreLow = False, returnScoreLocation = False, returnScoreType = False, returnScoreTypeCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanEntity/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanEntity/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryQueuedGraduationPlanRecalcTrigger(searchConditions = [], EntityID = 1, returnQueuedGraduationPlanRecalcTriggerID = False, returnCreatedTime = False, returnEndTime = False, returnHostName = False, returnModifiedTime = False, returnProcessID = False, returnSourceID = False, returnSourceObject = False, returnSourceObjectCode = False, returnStartTime = False, returnStatus = False, returnStatusCode = False, returnThreadName = False, returnUserIDCreatedBy = False, returnUserIDImpersonator = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScore/" + str(EndorsementRequirementAssessmentScoreID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every QueuedGraduationPlanRecalcTrigger in the district.
 
-def createEndorsementRequirementAssessmentScore(EntityID = 1, setEndorsementRequirementAssessmentClusterID = None, setEndorsementRequirementAssessmentScoreDefaultID = None, setPassingScore = None, setPassingScoreHigh = None, setPassingScoreLow = None, setScoreLocation = None, setScoreType = None, setScoreTypeCode = None, setRelationships = None, returnEndorsementRequirementAssessmentScoreID = True, returnAssessmentScoreColumn = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterID = False, returnEndorsementRequirementAssessmentScoreDefaultID = False, returnModifiedTime = False, returnPassingScore = False, returnPassingScoreHigh = False, returnPassingScoreLow = False, returnScoreLocation = False, returnScoreType = False, returnScoreTypeCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every QueuedGraduationPlanRecalcTrigger in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScore/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteEndorsementRequirementAssessmentScore(EndorsementRequirementAssessmentScoreID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryEndorsementRequirementAssessmentScoreDefault(EntityID = 1, page = 1, pageSize = 100, returnEndorsementRequirementAssessmentScoreDefaultID = True, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterDefaultID = False, returnModifiedTime = False, returnPassingScore = False, returnPassingScoreHigh = False, returnPassingScoreLow = False, returnScoreLocation = False, returnScoreType = False, returnScoreTypeCode = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScoreDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedGraduationPlanRecalcTrigger/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getEndorsementRequirementAssessmentScoreDefault(EndorsementRequirementAssessmentScoreDefaultID, EntityID = 1, returnEndorsementRequirementAssessmentScoreDefaultID = True, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterDefaultID = False, returnModifiedTime = False, returnPassingScore = False, returnPassingScoreHigh = False, returnPassingScoreLow = False, returnScoreLocation = False, returnScoreType = False, returnScoreTypeCode = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedGraduationPlanRecalcTrigger/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryQueuedStudentEndorsementCalculation(searchConditions = [], EntityID = 1, returnQueuedStudentEndorsementCalculationID = False, returnCreatedTime = False, returnDistrictID = False, returnModifiedTime = False, returnStatus = False, returnStatusCode = False, returnStudentID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScoreDefault/" + str(EndorsementRequirementAssessmentScoreDefaultID), verb = "get", return_params_list = return_params_list)
+	"""Get every QueuedStudentEndorsementCalculation in the district.
 
-def modifyEndorsementRequirementAssessmentScoreDefault(EndorsementRequirementAssessmentScoreDefaultID, EntityID = 1, setEndorsementRequirementAssessmentClusterDefaultID = None, setPassingScore = None, setPassingScoreHigh = None, setPassingScoreLow = None, setScoreLocation = None, setScoreType = None, setScoreTypeCode = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnEndorsementRequirementAssessmentScoreDefaultID = True, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterDefaultID = False, returnModifiedTime = False, returnPassingScore = False, returnPassingScoreHigh = False, returnPassingScoreLow = False, returnScoreLocation = False, returnScoreType = False, returnScoreTypeCode = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every QueuedStudentEndorsementCalculation in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScoreDefault/" + str(EndorsementRequirementAssessmentScoreDefaultID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createEndorsementRequirementAssessmentScoreDefault(EntityID = 1, setEndorsementRequirementAssessmentClusterDefaultID = None, setPassingScore = None, setPassingScoreHigh = None, setPassingScoreLow = None, setScoreLocation = None, setScoreType = None, setScoreTypeCode = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnEndorsementRequirementAssessmentScoreDefaultID = True, returnCreatedTime = False, returnEndorsementRequirementAssessmentClusterDefaultID = False, returnModifiedTime = False, returnPassingScore = False, returnPassingScoreHigh = False, returnPassingScoreLow = False, returnScoreLocation = False, returnScoreType = False, returnScoreTypeCode = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementAssessmentScoreDefault/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteEndorsementRequirementAssessmentScoreDefault(EndorsementRequirementAssessmentScoreDefaultID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedStudentEndorsementCalculation/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedStudentEndorsementCalculation/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryEndorsementRequirementCurriculum(EntityID = 1, page = 1, pageSize = 100, returnEndorsementRequirementCurriculumID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnCreditsRequired = False, returnCurriculumClusterID = False, returnEndorsementRequirementCurriculumDefaultID = False, returnEndorsementRequirementID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryQueuedStudentPlanCourseworkApplication(searchConditions = [], EntityID = 1, returnQueuedStudentPlanCourseworkApplicationID = False, returnCreatedTime = False, returnDistrictID = False, returnEndTime = False, returnHostName = False, returnModifiedTime = False, returnProcessID = False, returnRecalculationStatusDetails = False, returnStartTime = False, returnStatus = False, returnStatusCode = False, returnStudentPlanID = False, returnThreadName = False, returnUserIDCreatedBy = False, returnUserIDImpersonator = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every QueuedStudentPlanCourseworkApplication in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculum/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every QueuedStudentPlanCourseworkApplication in the district filtered by search conditions.
 
-def getEndorsementRequirementCurriculum(EndorsementRequirementCurriculumID, EntityID = 1, returnEndorsementRequirementCurriculumID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnCreditsRequired = False, returnCurriculumClusterID = False, returnEndorsementRequirementCurriculumDefaultID = False, returnEndorsementRequirementID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculum/" + str(EndorsementRequirementCurriculumID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyEndorsementRequirementCurriculum(EndorsementRequirementCurriculumID, EntityID = 1, setAdvancedCreditsRequired = None, setCreditsRequired = None, setCurriculumClusterID = None, setEndorsementRequirementCurriculumDefaultID = None, setEndorsementRequirementID = None, setRelationships = None, returnEndorsementRequirementCurriculumID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnCreditsRequired = False, returnCurriculumClusterID = False, returnEndorsementRequirementCurriculumDefaultID = False, returnEndorsementRequirementID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculum/" + str(EndorsementRequirementCurriculumID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createEndorsementRequirementCurriculum(EntityID = 1, setAdvancedCreditsRequired = None, setCreditsRequired = None, setCurriculumClusterID = None, setEndorsementRequirementCurriculumDefaultID = None, setEndorsementRequirementID = None, setRelationships = None, returnEndorsementRequirementCurriculumID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnCreditsRequired = False, returnCurriculumClusterID = False, returnEndorsementRequirementCurriculumDefaultID = False, returnEndorsementRequirementID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedStudentPlanCourseworkApplication/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedStudentPlanCourseworkApplication/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryStudentArea(searchConditions = [], EntityID = 1, returnStudentAreaID = False, returnAreaID = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsFulfilledInPlan = False, returnModifiedTime = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculum/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every StudentArea in the district.
 
-def deleteEndorsementRequirementCurriculum(EndorsementRequirementCurriculumID, EntityID = 1):
+	This function returns a dataframe of every StudentArea in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryEndorsementRequirementCurriculumDefault(EntityID = 1, page = 1, pageSize = 100, returnEndorsementRequirementCurriculumDefaultID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnCreditsRequired = False, returnCurriculumClusterDefaultID = False, returnEndorsementRequirementDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculumDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getEndorsementRequirementCurriculumDefault(EndorsementRequirementCurriculumDefaultID, EntityID = 1, returnEndorsementRequirementCurriculumDefaultID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnCreditsRequired = False, returnCurriculumClusterDefaultID = False, returnEndorsementRequirementDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculumDefault/" + str(EndorsementRequirementCurriculumDefaultID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyEndorsementRequirementCurriculumDefault(EndorsementRequirementCurriculumDefaultID, EntityID = 1, setAdvancedCreditsRequired = None, setCreditsRequired = None, setCurriculumClusterDefaultID = None, setEndorsementRequirementDefaultID = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnEndorsementRequirementCurriculumDefaultID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnCreditsRequired = False, returnCurriculumClusterDefaultID = False, returnEndorsementRequirementDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentArea/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryStudentCareerPlan(searchConditions = [], EntityID = 1, returnStudentCareerPlanID = False, returnCareerPlanGradeLevelID = False, returnCreatedTime = False, returnCredits = False, returnCurriculumID = False, returnGradeListDisplay = False, returnIsStudentPermittedToChangeGradeLevel = False, returnIsStudentPermittedToDelete = False, returnModifiedTime = False, returnStudentCourseRequestID = False, returnStudentID = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculumDefault/" + str(EndorsementRequirementCurriculumDefaultID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every StudentCareerPlan in the district.
 
-def createEndorsementRequirementCurriculumDefault(EntityID = 1, setAdvancedCreditsRequired = None, setCreditsRequired = None, setCurriculumClusterDefaultID = None, setEndorsementRequirementDefaultID = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnEndorsementRequirementCurriculumDefaultID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnCreditsRequired = False, returnCurriculumClusterDefaultID = False, returnEndorsementRequirementDefaultID = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every StudentCareerPlan in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementCurriculumDefault/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteEndorsementRequirementCurriculumDefault(EndorsementRequirementCurriculumDefaultID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryEndorsementRequirementDefault(EntityID = 1, page = 1, pageSize = 100, returnEndorsementRequirementDefaultID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnDescription = False, returnEndorsementOptionDefaultID = False, returnMaximumClusterLimit = False, returnMinimumClusterLimit = False, returnModifiedTime = False, returnMustFulfillAllCurriculumClusters = False, returnOrderNumber = False, returnOverallCreditsRequired = False, returnRequirementAssessmentType = False, returnRequirementAssessmentTypeCode = False, returnRequirementType = False, returnRequirementTypeCode = False, returnSkywardHash = False, returnSkywardID = False, returnUseMaximumClusterLimit = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentCareerPlan/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getEndorsementRequirementDefault(EndorsementRequirementDefaultID, EntityID = 1, returnEndorsementRequirementDefaultID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnDescription = False, returnEndorsementOptionDefaultID = False, returnMaximumClusterLimit = False, returnMinimumClusterLimit = False, returnModifiedTime = False, returnMustFulfillAllCurriculumClusters = False, returnOrderNumber = False, returnOverallCreditsRequired = False, returnRequirementAssessmentType = False, returnRequirementAssessmentTypeCode = False, returnRequirementType = False, returnRequirementTypeCode = False, returnSkywardHash = False, returnSkywardID = False, returnUseMaximumClusterLimit = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentCareerPlan/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryStudentEndorsement(searchConditions = [], EntityID = 1, returnStudentEndorsementID = False, returnAttachmentComments = False, returnAttachmentCount = False, returnAttachmentIndicatorColumn = False, returnCompletionMethod = False, returnCreatedTime = False, returnDistrictID = False, returnEndorsementID = False, returnGuardianSignedTime = False, returnHasDeclaredEndorsementOptions = False, returnHasEndorsementOptions = False, returnHasEndorsementOptionsToAddOrDeclare = False, returnIsAdminAdded = False, returnIsComplete = False, returnIsDeclared = False, returnIsReceived = False, returnIsSignedByGuardian = False, returnIsSignedByStudent = False, returnModifiedTime = False, returnNameIDGuardianSignedBy = False, returnStudentID = False, returnStudentSignedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementDefault/" + str(EndorsementRequirementDefaultID), verb = "get", return_params_list = return_params_list)
+	"""Get every StudentEndorsement in the district.
 
-def modifyEndorsementRequirementDefault(EndorsementRequirementDefaultID, EntityID = 1, setAdvancedCreditsRequired = None, setDescription = None, setEndorsementOptionDefaultID = None, setMaximumClusterLimit = None, setMinimumClusterLimit = None, setMustFulfillAllCurriculumClusters = None, setOrderNumber = None, setOverallCreditsRequired = None, setRequirementAssessmentType = None, setRequirementAssessmentTypeCode = None, setRequirementType = None, setRequirementTypeCode = None, setSkywardHash = None, setSkywardID = None, setUseMaximumClusterLimit = None, setRelationships = None, returnEndorsementRequirementDefaultID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnDescription = False, returnEndorsementOptionDefaultID = False, returnMaximumClusterLimit = False, returnMinimumClusterLimit = False, returnModifiedTime = False, returnMustFulfillAllCurriculumClusters = False, returnOrderNumber = False, returnOverallCreditsRequired = False, returnRequirementAssessmentType = False, returnRequirementAssessmentTypeCode = False, returnRequirementType = False, returnRequirementTypeCode = False, returnSkywardHash = False, returnSkywardID = False, returnUseMaximumClusterLimit = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every StudentEndorsement in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementDefault/" + str(EndorsementRequirementDefaultID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createEndorsementRequirementDefault(EntityID = 1, setAdvancedCreditsRequired = None, setDescription = None, setEndorsementOptionDefaultID = None, setMaximumClusterLimit = None, setMinimumClusterLimit = None, setMustFulfillAllCurriculumClusters = None, setOrderNumber = None, setOverallCreditsRequired = None, setRequirementAssessmentType = None, setRequirementAssessmentTypeCode = None, setRequirementType = None, setRequirementTypeCode = None, setSkywardHash = None, setSkywardID = None, setUseMaximumClusterLimit = None, setRelationships = None, returnEndorsementRequirementDefaultID = True, returnAdvancedCreditsRequired = False, returnCreatedTime = False, returnDescription = False, returnEndorsementOptionDefaultID = False, returnMaximumClusterLimit = False, returnMinimumClusterLimit = False, returnModifiedTime = False, returnMustFulfillAllCurriculumClusters = False, returnOrderNumber = False, returnOverallCreditsRequired = False, returnRequirementAssessmentType = False, returnRequirementAssessmentTypeCode = False, returnRequirementType = False, returnRequirementTypeCode = False, returnSkywardHash = False, returnSkywardID = False, returnUseMaximumClusterLimit = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/EndorsementRequirementDefault/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteEndorsementRequirementDefault(EndorsementRequirementDefaultID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsement/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsement/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryPlan(EntityID = 1, page = 1, pageSize = 100, returnPlanID = True, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEdFiGraduationPlanID = False, returnGeneralElectiveSubAreaID = False, returnGradYearHigh = False, returnGradYearLow = False, returnIsNotSystemPlan = False, returnIsSystemPlan = False, returnModifiedTime = False, returnNonElectiveCreditTotal = False, returnNumberOfSubAreasForCurriculum = False, returnSkywardHash = False, returnSkywardID = False, returnTotalCredits = False, returnTotalYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryStudentEndorsementOption(searchConditions = [], EntityID = 1, returnStudentEndorsementOptionID = False, returnAdminAdded = False, returnCreatedTime = False, returnEndorsementOptionID = False, returnGradPlanInProgress = False, returnIsComplete = False, returnIsDeclared = False, returnIsReceived = False, returnModifiedTime = False, returnOverallCreditsRequired = False, returnStudentEndorsementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every StudentEndorsementOption in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Plan/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every StudentEndorsementOption in the district filtered by search conditions.
 
-def getPlan(PlanID, EntityID = 1, returnPlanID = True, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEdFiGraduationPlanID = False, returnGeneralElectiveSubAreaID = False, returnGradYearHigh = False, returnGradYearLow = False, returnIsNotSystemPlan = False, returnIsSystemPlan = False, returnModifiedTime = False, returnNonElectiveCreditTotal = False, returnNumberOfSubAreasForCurriculum = False, returnSkywardHash = False, returnSkywardID = False, returnTotalCredits = False, returnTotalYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Plan/" + str(PlanID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyPlan(PlanID, EntityID = 1, setDescription = None, setDistrictID = None, setEdFiGraduationPlanID = None, setGradYearHigh = None, setGradYearLow = None, setSkywardHash = None, setSkywardID = None, setTotalCredits = None, setRelationships = None, returnPlanID = True, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEdFiGraduationPlanID = False, returnGeneralElectiveSubAreaID = False, returnGradYearHigh = False, returnGradYearLow = False, returnIsNotSystemPlan = False, returnIsSystemPlan = False, returnModifiedTime = False, returnNonElectiveCreditTotal = False, returnNumberOfSubAreasForCurriculum = False, returnSkywardHash = False, returnSkywardID = False, returnTotalCredits = False, returnTotalYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Plan/" + str(PlanID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createPlan(EntityID = 1, setDescription = None, setDistrictID = None, setEdFiGraduationPlanID = None, setGradYearHigh = None, setGradYearLow = None, setSkywardHash = None, setSkywardID = None, setTotalCredits = None, setRelationships = None, returnPlanID = True, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEdFiGraduationPlanID = False, returnGeneralElectiveSubAreaID = False, returnGradYearHigh = False, returnGradYearLow = False, returnIsNotSystemPlan = False, returnIsSystemPlan = False, returnModifiedTime = False, returnNonElectiveCreditTotal = False, returnNumberOfSubAreasForCurriculum = False, returnSkywardHash = False, returnSkywardID = False, returnTotalCredits = False, returnTotalYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementOption/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementOption/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryStudentEndorsementRequirement(searchConditions = [], EntityID = 1, returnStudentEndorsementRequirementID = False, returnAdvancedCreditsApplied = False, returnCreatedTime = False, returnEndorsementRequirementID = False, returnIsComplete = False, returnModifiedTime = False, returnOverallCreditsApplied = False, returnStudentEndorsementOptionID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/Plan/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every StudentEndorsementRequirement in the district.
 
-def deletePlan(PlanID, EntityID = 1):
+	This function returns a dataframe of every StudentEndorsementRequirement in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryPlanDefault(EntityID = 1, page = 1, pageSize = 100, returnPlanDefaultID = True, returnCreatedTime = False, returnEntityID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getPlanDefault(PlanDefaultID, EntityID = 1, returnPlanDefaultID = True, returnCreatedTime = False, returnEntityID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanDefault/" + str(PlanDefaultID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyPlanDefault(PlanDefaultID, EntityID = 1, setEntityID = None, setGradYearHigh = None, setGradYearLow = None, setPlanID = None, setRelationships = None, returnPlanDefaultID = True, returnCreatedTime = False, returnEntityID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirement/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirement/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryStudentEndorsementRequirementAssessment(searchConditions = [], EntityID = 1, returnStudentEndorsementRequirementAssessmentID = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentID = False, returnIsComplete = False, returnModifiedTime = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanDefault/" + str(PlanDefaultID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every StudentEndorsementRequirementAssessment in the district.
 
-def createPlanDefault(EntityID = 1, setEntityID = None, setGradYearHigh = None, setGradYearLow = None, setPlanID = None, setRelationships = None, returnPlanDefaultID = True, returnCreatedTime = False, returnEntityID = False, returnGradYearHigh = False, returnGradYearLow = False, returnModifiedTime = False, returnPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every StudentEndorsementRequirementAssessment in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanDefault/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deletePlanDefault(PlanDefaultID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryPlanEntity(EntityID = 1, page = 1, pageSize = 100, returnPlanEntityID = True, returnCreatedTime = False, returnEntityID = False, returnGradYearHigh = False, returnGradYearLow = False, returnGradYearRange = False, returnModifiedTime = False, returnPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanEntity/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessment/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getPlanEntity(PlanEntityID, EntityID = 1, returnPlanEntityID = True, returnCreatedTime = False, returnEntityID = False, returnGradYearHigh = False, returnGradYearLow = False, returnGradYearRange = False, returnModifiedTime = False, returnPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessment/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryStudentEndorsementRequirementAssessmentScore(searchConditions = [], EntityID = 1, returnStudentEndorsementRequirementAssessmentScoreID = False, returnAssessmentScore = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentScoreID = False, returnIsPassingScore = False, returnModifiedTime = False, returnStudentEndorsementRequirementAssessmentID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanEntity/" + str(PlanEntityID), verb = "get", return_params_list = return_params_list)
+	"""Get every StudentEndorsementRequirementAssessmentScore in the district.
 
-def modifyPlanEntity(PlanEntityID, EntityID = 1, setEntityID = None, setGradYearHigh = None, setGradYearLow = None, setPlanID = None, setRelationships = None, returnPlanEntityID = True, returnCreatedTime = False, returnEntityID = False, returnGradYearHigh = False, returnGradYearLow = False, returnGradYearRange = False, returnModifiedTime = False, returnPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every StudentEndorsementRequirementAssessmentScore in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanEntity/" + str(PlanEntityID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createPlanEntity(EntityID = 1, setEntityID = None, setGradYearHigh = None, setGradYearLow = None, setPlanID = None, setRelationships = None, returnPlanEntityID = True, returnCreatedTime = False, returnEntityID = False, returnGradYearHigh = False, returnGradYearLow = False, returnGradYearRange = False, returnModifiedTime = False, returnPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/PlanEntity/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deletePlanEntity(PlanEntityID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessmentScore/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessmentScore/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryQueuedGraduationPlanRecalcTrigger(EntityID = 1, page = 1, pageSize = 100, returnQueuedGraduationPlanRecalcTriggerID = True, returnCreatedTime = False, returnModifiedTime = False, returnSourceID = False, returnSourceObject = False, returnSourceObjectCode = False, returnStatus = False, returnStatusCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryStudentEndorsementRequirementCourseRequest(searchConditions = [], EntityID = 1, returnStudentEndorsementRequirementCourseRequestID = False, returnAppliedAdvancedCredits = False, returnAppliedOverallCredits = False, returnApplyToType = False, returnApplyToTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementCurriculumID = False, returnModifiedTime = False, returnStudentCourseRequestID = False, returnStudentEndorsementRequirementCurriculumID = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every StudentEndorsementRequirementCourseRequest in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedGraduationPlanRecalcTrigger/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every StudentEndorsementRequirementCourseRequest in the district filtered by search conditions.
 
-def getQueuedGraduationPlanRecalcTrigger(QueuedGraduationPlanRecalcTriggerID, EntityID = 1, returnQueuedGraduationPlanRecalcTriggerID = True, returnCreatedTime = False, returnModifiedTime = False, returnSourceID = False, returnSourceObject = False, returnSourceObjectCode = False, returnStatus = False, returnStatusCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedGraduationPlanRecalcTrigger/" + str(QueuedGraduationPlanRecalcTriggerID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyQueuedGraduationPlanRecalcTrigger(QueuedGraduationPlanRecalcTriggerID, EntityID = 1, setSourceID = None, setSourceObject = None, setStatus = None, setRelationships = None, returnQueuedGraduationPlanRecalcTriggerID = True, returnCreatedTime = False, returnModifiedTime = False, returnSourceID = False, returnSourceObject = False, returnSourceObjectCode = False, returnStatus = False, returnStatusCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedGraduationPlanRecalcTrigger/" + str(QueuedGraduationPlanRecalcTriggerID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createQueuedGraduationPlanRecalcTrigger(EntityID = 1, setSourceID = None, setSourceObject = None, setStatus = None, setRelationships = None, returnQueuedGraduationPlanRecalcTriggerID = True, returnCreatedTime = False, returnModifiedTime = False, returnSourceID = False, returnSourceObject = False, returnSourceObjectCode = False, returnStatus = False, returnStatusCode = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCourseRequest/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCourseRequest/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryStudentEndorsementRequirementCurriculum(searchConditions = [], EntityID = 1, returnStudentEndorsementRequirementCurriculumID = False, returnAdvancedCreditsApplied = False, returnCreatedTime = False, returnEndorsementRequirementCurriculumID = False, returnIsComplete = False, returnModifiedTime = False, returnOverallCreditsApplied = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedGraduationPlanRecalcTrigger/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every StudentEndorsementRequirementCurriculum in the district.
 
-def deleteQueuedGraduationPlanRecalcTrigger(QueuedGraduationPlanRecalcTriggerID, EntityID = 1):
+	This function returns a dataframe of every StudentEndorsementRequirementCurriculum in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryQueuedStudentPlanCourseworkApplication(EntityID = 1, page = 1, pageSize = 100, returnQueuedStudentPlanCourseworkApplicationID = True, returnCreatedTime = False, returnDistrictID = False, returnEndTime = False, returnHostName = False, returnModifiedTime = False, returnProcessID = False, returnRecalculationStatusDetails = False, returnStartTime = False, returnStatus = False, returnStatusCode = False, returnStudentPlanID = False, returnThreadName = False, returnUserIDCreatedBy = False, returnUserIDImpersonator = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedStudentPlanCourseworkApplication/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getQueuedStudentPlanCourseworkApplication(QueuedStudentPlanCourseworkApplicationID, EntityID = 1, returnQueuedStudentPlanCourseworkApplicationID = True, returnCreatedTime = False, returnDistrictID = False, returnEndTime = False, returnHostName = False, returnModifiedTime = False, returnProcessID = False, returnRecalculationStatusDetails = False, returnStartTime = False, returnStatus = False, returnStatusCode = False, returnStudentPlanID = False, returnThreadName = False, returnUserIDCreatedBy = False, returnUserIDImpersonator = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedStudentPlanCourseworkApplication/" + str(QueuedStudentPlanCourseworkApplicationID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyQueuedStudentPlanCourseworkApplication(QueuedStudentPlanCourseworkApplicationID, EntityID = 1, setDistrictID = None, setEndTime = None, setHostName = None, setProcessID = None, setStartTime = None, setStatus = None, setStudentPlanID = None, setThreadName = None, setUserIDImpersonator = None, setRelationships = None, returnQueuedStudentPlanCourseworkApplicationID = True, returnCreatedTime = False, returnDistrictID = False, returnEndTime = False, returnHostName = False, returnModifiedTime = False, returnProcessID = False, returnRecalculationStatusDetails = False, returnStartTime = False, returnStatus = False, returnStatusCode = False, returnStudentPlanID = False, returnThreadName = False, returnUserIDCreatedBy = False, returnUserIDImpersonator = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCurriculum/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCurriculum/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryStudentPlan(searchConditions = [], EntityID = 1, returnStudentPlanID = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsCurrent = False, returnModifiedTime = False, returnPlanID = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedStudentPlanCourseworkApplication/" + str(QueuedStudentPlanCourseworkApplicationID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every StudentPlan in the district.
 
-def createQueuedStudentPlanCourseworkApplication(EntityID = 1, setDistrictID = None, setEndTime = None, setHostName = None, setProcessID = None, setStartTime = None, setStatus = None, setStudentPlanID = None, setThreadName = None, setUserIDImpersonator = None, setRelationships = None, returnQueuedStudentPlanCourseworkApplicationID = True, returnCreatedTime = False, returnDistrictID = False, returnEndTime = False, returnHostName = False, returnModifiedTime = False, returnProcessID = False, returnRecalculationStatusDetails = False, returnStartTime = False, returnStatus = False, returnStatusCode = False, returnStudentPlanID = False, returnThreadName = False, returnUserIDCreatedBy = False, returnUserIDImpersonator = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every StudentPlan in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/QueuedStudentPlanCourseworkApplication/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteQueuedStudentPlanCourseworkApplication(QueuedStudentPlanCourseworkApplicationID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryStudentArea(EntityID = 1, page = 1, pageSize = 100, returnStudentAreaID = True, returnAreaID = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsFulfilledInPlan = False, returnModifiedTime = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlan/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getStudentArea(StudentAreaID, EntityID = 1, returnStudentAreaID = True, returnAreaID = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsFulfilledInPlan = False, returnModifiedTime = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlan/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryStudentPlanThreadLock(searchConditions = [], EntityID = 1, returnStudentPlanThreadLockID = False, returnCreatedTime = False, returnDistrictID = False, returnModifiedTime = False, returnStudentPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentArea/" + str(StudentAreaID), verb = "get", return_params_list = return_params_list)
+	"""Get every StudentPlanThreadLock in the district.
 
-def modifyStudentArea(StudentAreaID, EntityID = 1, setAreaID = None, setStudentPlanID = None, setRelationships = None, returnStudentAreaID = True, returnAreaID = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsFulfilledInPlan = False, returnModifiedTime = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
+	This function returns a dataframe of every StudentPlanThreadLock in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentArea/" + str(StudentAreaID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createStudentArea(EntityID = 1, setAreaID = None, setStudentPlanID = None, setRelationships = None, returnStudentAreaID = True, returnAreaID = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsFulfilledInPlan = False, returnModifiedTime = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentArea/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteStudentArea(StudentAreaID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlanThreadLock/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlanThreadLock/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryStudentCareerPlan(EntityID = 1, page = 1, pageSize = 100, returnStudentCareerPlanID = True, returnCareerPlanGradeLevelID = False, returnCreatedTime = False, returnCredits = False, returnCurriculumID = False, returnGradeListDisplay = False, returnIsStudentPermittedToChangeGradeLevel = False, returnIsStudentPermittedToDelete = False, returnModifiedTime = False, returnStudentCourseRequestID = False, returnStudentID = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryStudentSubArea(searchConditions = [], EntityID = 1, returnStudentSubAreaID = False, returnAttemptedCredits = False, returnCanAddManualStudentSubAreaCurriculumSubArea = False, returnCanAddWaiver = False, returnCanHaveWaiver = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsFulfilledInPlan = False, returnModifiedTime = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentAreaID = False, returnStudentPlanID = False, returnSubAreaID = False, returnTotalManualCredits = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every StudentSubArea in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentCareerPlan/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every StudentSubArea in the district filtered by search conditions.
 
-def getStudentCareerPlan(StudentCareerPlanID, EntityID = 1, returnStudentCareerPlanID = True, returnCareerPlanGradeLevelID = False, returnCreatedTime = False, returnCredits = False, returnCurriculumID = False, returnGradeListDisplay = False, returnIsStudentPermittedToChangeGradeLevel = False, returnIsStudentPermittedToDelete = False, returnModifiedTime = False, returnStudentCourseRequestID = False, returnStudentID = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentCareerPlan/" + str(StudentCareerPlanID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyStudentCareerPlan(StudentCareerPlanID, EntityID = 1, setCareerPlanGradeLevelID = None, setCredits = None, setCurriculumID = None, setIsStudentPermittedToChangeGradeLevel = None, setIsStudentPermittedToDelete = None, setStudentCourseRequestID = None, setStudentID = None, setStudentSubAreaID = None, setRelationships = None, returnStudentCareerPlanID = True, returnCareerPlanGradeLevelID = False, returnCreatedTime = False, returnCredits = False, returnCurriculumID = False, returnGradeListDisplay = False, returnIsStudentPermittedToChangeGradeLevel = False, returnIsStudentPermittedToDelete = False, returnModifiedTime = False, returnStudentCourseRequestID = False, returnStudentID = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentCareerPlan/" + str(StudentCareerPlanID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createStudentCareerPlan(EntityID = 1, setCareerPlanGradeLevelID = None, setCredits = None, setCurriculumID = None, setIsStudentPermittedToChangeGradeLevel = None, setIsStudentPermittedToDelete = None, setStudentCourseRequestID = None, setStudentID = None, setStudentSubAreaID = None, setRelationships = None, returnStudentCareerPlanID = True, returnCareerPlanGradeLevelID = False, returnCreatedTime = False, returnCredits = False, returnCurriculumID = False, returnGradeListDisplay = False, returnIsStudentPermittedToChangeGradeLevel = False, returnIsStudentPermittedToDelete = False, returnModifiedTime = False, returnStudentCourseRequestID = False, returnStudentID = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubArea/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryStudentSubAreaCurriculumSubArea(searchConditions = [], EntityID = 1, returnStudentSubAreaCurriculumSubAreaID = False, returnAppliedOrder = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnEntryMethod = False, returnEntryMethodCode = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsAutomatic = False, returnModifiedTime = False, returnPlannedCredits = False, returnStudentCourseRequestID = False, returnStudentSubAreaID = False, returnTotalCredits = False, returnTotalNonAttemptedCredits = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentCareerPlan/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every StudentSubAreaCurriculumSubArea in the district.
 
-def deleteStudentCareerPlan(StudentCareerPlanID, EntityID = 1):
+	This function returns a dataframe of every StudentSubAreaCurriculumSubArea in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryStudentEndorsement(EntityID = 1, page = 1, pageSize = 100, returnStudentEndorsementID = True, returnAttachmentComments = False, returnAttachmentCount = False, returnAttachmentIndicatorColumn = False, returnCompletionMethod = False, returnCreatedTime = False, returnDistrictID = False, returnEndorsementID = False, returnGuardianSignedTime = False, returnHasDeclaredEndorsementOptions = False, returnHasEndorsementOptions = False, returnHasEndorsementOptionsToAddOrDeclare = False, returnIsAdminAdded = False, returnIsComplete = False, returnIsDeclared = False, returnIsReceived = False, returnIsSignedByGuardian = False, returnIsSignedByStudent = False, returnModifiedTime = False, returnNameIDGuardianSignedBy = False, returnStudentID = False, returnStudentSignedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsement/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getStudentEndorsement(StudentEndorsementID, EntityID = 1, returnStudentEndorsementID = True, returnAttachmentComments = False, returnAttachmentCount = False, returnAttachmentIndicatorColumn = False, returnCompletionMethod = False, returnCreatedTime = False, returnDistrictID = False, returnEndorsementID = False, returnGuardianSignedTime = False, returnHasDeclaredEndorsementOptions = False, returnHasEndorsementOptions = False, returnHasEndorsementOptionsToAddOrDeclare = False, returnIsAdminAdded = False, returnIsComplete = False, returnIsDeclared = False, returnIsReceived = False, returnIsSignedByGuardian = False, returnIsSignedByStudent = False, returnModifiedTime = False, returnNameIDGuardianSignedBy = False, returnStudentID = False, returnStudentSignedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsement/" + str(StudentEndorsementID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyStudentEndorsement(StudentEndorsementID, EntityID = 1, setDistrictID = None, setEndorsementID = None, setGuardianSignedTime = None, setIsAdminAdded = None, setIsDeclared = None, setIsReceived = None, setIsSignedByGuardian = None, setIsSignedByStudent = None, setNameIDGuardianSignedBy = None, setStudentID = None, setStudentSignedTime = None, setRelationships = None, returnStudentEndorsementID = True, returnAttachmentComments = False, returnAttachmentCount = False, returnAttachmentIndicatorColumn = False, returnCompletionMethod = False, returnCreatedTime = False, returnDistrictID = False, returnEndorsementID = False, returnGuardianSignedTime = False, returnHasDeclaredEndorsementOptions = False, returnHasEndorsementOptions = False, returnHasEndorsementOptionsToAddOrDeclare = False, returnIsAdminAdded = False, returnIsComplete = False, returnIsDeclared = False, returnIsReceived = False, returnIsSignedByGuardian = False, returnIsSignedByStudent = False, returnModifiedTime = False, returnNameIDGuardianSignedBy = False, returnStudentID = False, returnStudentSignedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaCurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaCurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryStudentSubAreaWaiver(searchConditions = [], EntityID = 1, returnStudentSubAreaWaiverID = False, returnComment = False, returnCreatedTime = False, returnCredits = False, returnModifiedTime = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsement/" + str(StudentEndorsementID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every StudentSubAreaWaiver in the district.
 
-def createStudentEndorsement(EntityID = 1, setDistrictID = None, setEndorsementID = None, setGuardianSignedTime = None, setIsAdminAdded = None, setIsDeclared = None, setIsReceived = None, setIsSignedByGuardian = None, setIsSignedByStudent = None, setNameIDGuardianSignedBy = None, setStudentID = None, setStudentSignedTime = None, setRelationships = None, returnStudentEndorsementID = True, returnAttachmentComments = False, returnAttachmentCount = False, returnAttachmentIndicatorColumn = False, returnCompletionMethod = False, returnCreatedTime = False, returnDistrictID = False, returnEndorsementID = False, returnGuardianSignedTime = False, returnHasDeclaredEndorsementOptions = False, returnHasEndorsementOptions = False, returnHasEndorsementOptionsToAddOrDeclare = False, returnIsAdminAdded = False, returnIsComplete = False, returnIsDeclared = False, returnIsReceived = False, returnIsSignedByGuardian = False, returnIsSignedByStudent = False, returnModifiedTime = False, returnNameIDGuardianSignedBy = False, returnStudentID = False, returnStudentSignedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every StudentSubAreaWaiver in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsement/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteStudentEndorsement(StudentEndorsementID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryStudentEndorsementOption(EntityID = 1, page = 1, pageSize = 100, returnStudentEndorsementOptionID = True, returnAdminAdded = False, returnCreatedTime = False, returnEndorsementOptionID = False, returnGradPlanInProgress = False, returnIsComplete = False, returnIsDeclared = False, returnIsReceived = False, returnModifiedTime = False, returnOverallCreditsRequired = False, returnStudentEndorsementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementOption/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaWaiver/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getStudentEndorsementOption(StudentEndorsementOptionID, EntityID = 1, returnStudentEndorsementOptionID = True, returnAdminAdded = False, returnCreatedTime = False, returnEndorsementOptionID = False, returnGradPlanInProgress = False, returnIsComplete = False, returnIsDeclared = False, returnIsReceived = False, returnModifiedTime = False, returnOverallCreditsRequired = False, returnStudentEndorsementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaWaiver/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEverySubArea(searchConditions = [], EntityID = 1, returnSubAreaID = False, returnAreaID = False, returnAreaSubAreaDescription = False, returnCreatedTime = False, returnCredits = False, returnCurriculumSubAreaExistsForNonStudentCurriculum = False, returnDescription = False, returnDisplayOrder = False, returnGradReqRankGPARequiredCourseRuleOverride = False, returnGradReqRankGPARequiredCourseRuleOverrideCode = False, returnHasSkywardID = False, returnIsElective = False, returnIsSystemSubArea = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementOption/" + str(StudentEndorsementOptionID), verb = "get", return_params_list = return_params_list)
+	"""Get every SubArea in the district.
 
-def modifyStudentEndorsementOption(StudentEndorsementOptionID, EntityID = 1, setAdminAdded = None, setEndorsementOptionID = None, setIsComplete = None, setIsDeclared = None, setIsReceived = None, setStudentEndorsementID = None, setRelationships = None, returnStudentEndorsementOptionID = True, returnAdminAdded = False, returnCreatedTime = False, returnEndorsementOptionID = False, returnGradPlanInProgress = False, returnIsComplete = False, returnIsDeclared = False, returnIsReceived = False, returnModifiedTime = False, returnOverallCreditsRequired = False, returnStudentEndorsementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every SubArea in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementOption/" + str(StudentEndorsementOptionID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createStudentEndorsementOption(EntityID = 1, setAdminAdded = None, setEndorsementOptionID = None, setIsComplete = None, setIsDeclared = None, setIsReceived = None, setStudentEndorsementID = None, setRelationships = None, returnStudentEndorsementOptionID = True, returnAdminAdded = False, returnCreatedTime = False, returnEndorsementOptionID = False, returnGradPlanInProgress = False, returnIsComplete = False, returnIsDeclared = False, returnIsReceived = False, returnModifiedTime = False, returnOverallCreditsRequired = False, returnStudentEndorsementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementOption/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteStudentEndorsementOption(StudentEndorsementOptionID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubArea/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryStudentEndorsementRequirement(EntityID = 1, page = 1, pageSize = 100, returnStudentEndorsementRequirementID = True, returnAdvancedCreditsApplied = False, returnCreatedTime = False, returnEndorsementRequirementID = False, returnIsComplete = False, returnModifiedTime = False, returnOverallCreditsApplied = False, returnStudentEndorsementOptionID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEverySubAreaLimitGroup(searchConditions = [], EntityID = 1, returnSubAreaLimitGroupID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnCreditLimit = False, returnDescription = False, returnModifiedTime = False, returnSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every SubAreaLimitGroup in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirement/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every SubAreaLimitGroup in the district filtered by search conditions.
 
-def getStudentEndorsementRequirement(StudentEndorsementRequirementID, EntityID = 1, returnStudentEndorsementRequirementID = True, returnAdvancedCreditsApplied = False, returnCreatedTime = False, returnEndorsementRequirementID = False, returnIsComplete = False, returnModifiedTime = False, returnOverallCreditsApplied = False, returnStudentEndorsementOptionID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirement/" + str(StudentEndorsementRequirementID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyStudentEndorsementRequirement(StudentEndorsementRequirementID, EntityID = 1, setEndorsementRequirementID = None, setIsComplete = None, setStudentEndorsementOptionID = None, setRelationships = None, returnStudentEndorsementRequirementID = True, returnAdvancedCreditsApplied = False, returnCreatedTime = False, returnEndorsementRequirementID = False, returnIsComplete = False, returnModifiedTime = False, returnOverallCreditsApplied = False, returnStudentEndorsementOptionID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirement/" + str(StudentEndorsementRequirementID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createStudentEndorsementRequirement(EntityID = 1, setEndorsementRequirementID = None, setIsComplete = None, setStudentEndorsementOptionID = None, setRelationships = None, returnStudentEndorsementRequirementID = True, returnAdvancedCreditsApplied = False, returnCreatedTime = False, returnEndorsementRequirementID = False, returnIsComplete = False, returnModifiedTime = False, returnOverallCreditsApplied = False, returnStudentEndorsementOptionID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroup/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroup/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEverySubAreaLimitGroupCurriculumSubArea(searchConditions = [], EntityID = 1, returnSubAreaLimitGroupCurriculumSubAreaID = False, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnModifiedTime = False, returnSubAreaLimitGroupID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirement/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every SubAreaLimitGroupCurriculumSubArea in the district.
 
-def deleteStudentEndorsementRequirement(StudentEndorsementRequirementID, EntityID = 1):
+	This function returns a dataframe of every SubAreaLimitGroupCurriculumSubArea in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryStudentEndorsementRequirementAssessment(EntityID = 1, page = 1, pageSize = 100, returnStudentEndorsementRequirementAssessmentID = True, returnCreatedTime = False, returnEndorsementRequirementAssessmentID = False, returnIsComplete = False, returnModifiedTime = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessment/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getStudentEndorsementRequirementAssessment(StudentEndorsementRequirementAssessmentID, EntityID = 1, returnStudentEndorsementRequirementAssessmentID = True, returnCreatedTime = False, returnEndorsementRequirementAssessmentID = False, returnIsComplete = False, returnModifiedTime = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessment/" + str(StudentEndorsementRequirementAssessmentID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyStudentEndorsementRequirementAssessment(StudentEndorsementRequirementAssessmentID, EntityID = 1, setEndorsementRequirementAssessmentID = None, setIsComplete = None, setStudentEndorsementRequirementID = None, setRelationships = None, returnStudentEndorsementRequirementAssessmentID = True, returnCreatedTime = False, returnEndorsementRequirementAssessmentID = False, returnIsComplete = False, returnModifiedTime = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroupCurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroupCurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryTempEndorsementDefault(searchConditions = [], EntityID = 1, returnTempEndorsementDefaultID = False, returnActionType = False, returnActionTypeCode = False, returnCodeDescription = False, returnCreatedTime = False, returnEndorsementDefaultID = False, returnEndorsementID = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivable = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessment/" + str(StudentEndorsementRequirementAssessmentID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every TempEndorsementDefault in the district.
 
-def createStudentEndorsementRequirementAssessment(EntityID = 1, setEndorsementRequirementAssessmentID = None, setIsComplete = None, setStudentEndorsementRequirementID = None, setRelationships = None, returnStudentEndorsementRequirementAssessmentID = True, returnCreatedTime = False, returnEndorsementRequirementAssessmentID = False, returnIsComplete = False, returnModifiedTime = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every TempEndorsementDefault in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessment/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def deleteStudentEndorsementRequirementAssessment(StudentEndorsementRequirementAssessmentID, EntityID = 1):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryStudentEndorsementRequirementAssessmentScore(EntityID = 1, page = 1, pageSize = 100, returnStudentEndorsementRequirementAssessmentScoreID = True, returnAssessmentScore = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentScoreID = False, returnIsPassingScore = False, returnModifiedTime = False, returnStudentEndorsementRequirementAssessmentID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessmentScore/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementDefault/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getStudentEndorsementRequirementAssessmentScore(StudentEndorsementRequirementAssessmentScoreID, EntityID = 1, returnStudentEndorsementRequirementAssessmentScoreID = True, returnAssessmentScore = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentScoreID = False, returnIsPassingScore = False, returnModifiedTime = False, returnStudentEndorsementRequirementAssessmentID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryTempEndorsementImportError(searchConditions = [], EntityID = 1, returnTempEndorsementImportErrorID = False, returnCodeDescription = False, returnCreatedTime = False, returnErrorString = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessmentScore/" + str(StudentEndorsementRequirementAssessmentScoreID), verb = "get", return_params_list = return_params_list)
+	"""Get every TempEndorsementImportError in the district.
 
-def modifyStudentEndorsementRequirementAssessmentScore(StudentEndorsementRequirementAssessmentScoreID, EntityID = 1, setAssessmentScore = None, setEndorsementRequirementAssessmentScoreID = None, setIsPassingScore = None, setStudentEndorsementRequirementAssessmentID = None, setRelationships = None, returnStudentEndorsementRequirementAssessmentScoreID = True, returnAssessmentScore = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentScoreID = False, returnIsPassingScore = False, returnModifiedTime = False, returnStudentEndorsementRequirementAssessmentID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every TempEndorsementImportError in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessmentScore/" + str(StudentEndorsementRequirementAssessmentScoreID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createStudentEndorsementRequirementAssessmentScore(EntityID = 1, setAssessmentScore = None, setEndorsementRequirementAssessmentScoreID = None, setIsPassingScore = None, setStudentEndorsementRequirementAssessmentID = None, setRelationships = None, returnStudentEndorsementRequirementAssessmentScoreID = True, returnAssessmentScore = False, returnCreatedTime = False, returnEndorsementRequirementAssessmentScoreID = False, returnIsPassingScore = False, returnModifiedTime = False, returnStudentEndorsementRequirementAssessmentID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementAssessmentScore/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def deleteStudentEndorsementRequirementAssessmentScore(StudentEndorsementRequirementAssessmentScoreID, EntityID = 1):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementImportError/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementImportError/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryStudentEndorsementRequirementCourseRequest(EntityID = 1, page = 1, pageSize = 100, returnStudentEndorsementRequirementCourseRequestID = True, returnAppliedAdvancedCredits = False, returnAppliedOverallCredits = False, returnApplyToType = False, returnApplyToTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementCurriculumID = False, returnModifiedTime = False, returnStudentCourseRequestID = False, returnStudentEndorsementRequirementCurriculumID = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryTempFailedStudentSubAreaCurriculumSubArea(searchConditions = [], EntityID = 1, returnTempFailedStudentSubAreaCurriculumSubAreaID = False, returnActionType = False, returnAppliedOrder = False, returnAreaSubAreaDescription = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCourseCode = False, returnCourseDescription = False, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnEntityCode = False, returnFutureCredits = False, returnInProgressCredits = False, returnModifiedTime = False, returnNote = False, returnSchoolYearDescription = False, returnSectionCode = False, returnStudentCourseRequestID = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every TempFailedStudentSubAreaCurriculumSubArea in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCourseRequest/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every TempFailedStudentSubAreaCurriculumSubArea in the district filtered by search conditions.
 
-def getStudentEndorsementRequirementCourseRequest(StudentEndorsementRequirementCourseRequestID, EntityID = 1, returnStudentEndorsementRequirementCourseRequestID = True, returnAppliedAdvancedCredits = False, returnAppliedOverallCredits = False, returnApplyToType = False, returnApplyToTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementCurriculumID = False, returnModifiedTime = False, returnStudentCourseRequestID = False, returnStudentEndorsementRequirementCurriculumID = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCourseRequest/" + str(StudentEndorsementRequirementCourseRequestID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyStudentEndorsementRequirementCourseRequest(StudentEndorsementRequirementCourseRequestID, EntityID = 1, setAppliedAdvancedCredits = None, setAppliedOverallCredits = None, setApplyToType = None, setApplyToTypeCode = None, setEndorsementRequirementCurriculumID = None, setStudentCourseRequestID = None, setStudentEndorsementRequirementCurriculumID = None, setStudentEndorsementRequirementID = None, setRelationships = None, returnStudentEndorsementRequirementCourseRequestID = True, returnAppliedAdvancedCredits = False, returnAppliedOverallCredits = False, returnApplyToType = False, returnApplyToTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementCurriculumID = False, returnModifiedTime = False, returnStudentCourseRequestID = False, returnStudentEndorsementRequirementCurriculumID = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCourseRequest/" + str(StudentEndorsementRequirementCourseRequestID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createStudentEndorsementRequirementCourseRequest(EntityID = 1, setAppliedAdvancedCredits = None, setAppliedOverallCredits = None, setApplyToType = None, setApplyToTypeCode = None, setEndorsementRequirementCurriculumID = None, setStudentCourseRequestID = None, setStudentEndorsementRequirementCurriculumID = None, setStudentEndorsementRequirementID = None, setRelationships = None, returnStudentEndorsementRequirementCourseRequestID = True, returnAppliedAdvancedCredits = False, returnAppliedOverallCredits = False, returnApplyToType = False, returnApplyToTypeCode = False, returnCreatedTime = False, returnEndorsementRequirementCurriculumID = False, returnModifiedTime = False, returnStudentCourseRequestID = False, returnStudentEndorsementRequirementCurriculumID = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaCurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaCurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryTempFailedStudentSubAreaWaiver(searchConditions = [], EntityID = 1, returnTempFailedStudentSubAreaWaiverID = False, returnActionType = False, returnAreaSubAreaDescription = False, returnCreatedTime = False, returnCredits = False, returnModifiedTime = False, returnNote = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCourseRequest/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every TempFailedStudentSubAreaWaiver in the district.
 
-def deleteStudentEndorsementRequirementCourseRequest(StudentEndorsementRequirementCourseRequestID, EntityID = 1):
+	This function returns a dataframe of every TempFailedStudentSubAreaWaiver in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryStudentEndorsementRequirementCurriculum(EntityID = 1, page = 1, pageSize = 100, returnStudentEndorsementRequirementCurriculumID = True, returnAdvancedCreditsApplied = False, returnCreatedTime = False, returnEndorsementRequirementCurriculumID = False, returnIsComplete = False, returnModifiedTime = False, returnOverallCreditsApplied = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCurriculum/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getStudentEndorsementRequirementCurriculum(StudentEndorsementRequirementCurriculumID, EntityID = 1, returnStudentEndorsementRequirementCurriculumID = True, returnAdvancedCreditsApplied = False, returnCreatedTime = False, returnEndorsementRequirementCurriculumID = False, returnIsComplete = False, returnModifiedTime = False, returnOverallCreditsApplied = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCurriculum/" + str(StudentEndorsementRequirementCurriculumID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyStudentEndorsementRequirementCurriculum(StudentEndorsementRequirementCurriculumID, EntityID = 1, setEndorsementRequirementCurriculumID = None, setIsComplete = None, setStudentEndorsementRequirementID = None, setRelationships = None, returnStudentEndorsementRequirementCurriculumID = True, returnAdvancedCreditsApplied = False, returnCreatedTime = False, returnEndorsementRequirementCurriculumID = False, returnIsComplete = False, returnModifiedTime = False, returnOverallCreditsApplied = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaWaiver/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCurriculum/" + str(StudentEndorsementRequirementCurriculumID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createStudentEndorsementRequirementCurriculum(EntityID = 1, setEndorsementRequirementCurriculumID = None, setIsComplete = None, setStudentEndorsementRequirementID = None, setRelationships = None, returnStudentEndorsementRequirementCurriculumID = True, returnAdvancedCreditsApplied = False, returnCreatedTime = False, returnEndorsementRequirementCurriculumID = False, returnIsComplete = False, returnModifiedTime = False, returnOverallCreditsApplied = False, returnStudentEndorsementRequirementID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentEndorsementRequirementCurriculum/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteStudentEndorsementRequirementCurriculum(StudentEndorsementRequirementCurriculumID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEveryStudentPlan(EntityID = 1, page = 1, pageSize = 100, returnStudentPlanID = True, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsCurrent = False, returnModifiedTime = False, returnPlanID = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlan/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getStudentPlan(StudentPlanID, EntityID = 1, returnStudentPlanID = True, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsCurrent = False, returnModifiedTime = False, returnPlanID = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlan/" + str(StudentPlanID), verb = "get", return_params_list = return_params_list)
-
-def modifyStudentPlan(StudentPlanID, EntityID = 1, setAttemptedCredits = None, setFutureCredits = None, setInProgressCredits = None, setIsCurrent = None, setPlanID = None, setPlannedCredits = None, setRemainingCredits = None, setStudentID = None, setWaivedCredits = None, setRelationships = None, returnStudentPlanID = True, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsCurrent = False, returnModifiedTime = False, returnPlanID = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlan/" + str(StudentPlanID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createStudentPlan(EntityID = 1, setAttemptedCredits = None, setFutureCredits = None, setInProgressCredits = None, setIsCurrent = None, setPlanID = None, setPlannedCredits = None, setRemainingCredits = None, setStudentID = None, setWaivedCredits = None, setRelationships = None, returnStudentPlanID = True, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsCurrent = False, returnModifiedTime = False, returnPlanID = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlan/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteStudentPlan(StudentPlanID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEveryStudentPlanThreadLock(EntityID = 1, page = 1, pageSize = 100, returnStudentPlanThreadLockID = True, returnCreatedTime = False, returnDistrictID = False, returnModifiedTime = False, returnStudentPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlanThreadLock/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getStudentPlanThreadLock(StudentPlanThreadLockID, EntityID = 1, returnStudentPlanThreadLockID = True, returnCreatedTime = False, returnDistrictID = False, returnModifiedTime = False, returnStudentPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlanThreadLock/" + str(StudentPlanThreadLockID), verb = "get", return_params_list = return_params_list)
-
-def modifyStudentPlanThreadLock(StudentPlanThreadLockID, EntityID = 1, setDistrictID = None, setStudentPlanID = None, setRelationships = None, returnStudentPlanThreadLockID = True, returnCreatedTime = False, returnDistrictID = False, returnModifiedTime = False, returnStudentPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlanThreadLock/" + str(StudentPlanThreadLockID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createStudentPlanThreadLock(EntityID = 1, setDistrictID = None, setStudentPlanID = None, setRelationships = None, returnStudentPlanThreadLockID = True, returnCreatedTime = False, returnDistrictID = False, returnModifiedTime = False, returnStudentPlanID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentPlanThreadLock/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteStudentPlanThreadLock(StudentPlanThreadLockID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEveryStudentSubArea(EntityID = 1, page = 1, pageSize = 100, returnStudentSubAreaID = True, returnAttemptedCredits = False, returnCanAddManualStudentSubAreaCurriculumSubArea = False, returnCanAddWaiver = False, returnCanHaveWaiver = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsFulfilledInPlan = False, returnModifiedTime = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentAreaID = False, returnStudentPlanID = False, returnSubAreaID = False, returnTotalManualCredits = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getStudentSubArea(StudentSubAreaID, EntityID = 1, returnStudentSubAreaID = True, returnAttemptedCredits = False, returnCanAddManualStudentSubAreaCurriculumSubArea = False, returnCanAddWaiver = False, returnCanHaveWaiver = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsFulfilledInPlan = False, returnModifiedTime = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentAreaID = False, returnStudentPlanID = False, returnSubAreaID = False, returnTotalManualCredits = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubArea/" + str(StudentSubAreaID), verb = "get", return_params_list = return_params_list)
-
-def modifyStudentSubArea(StudentSubAreaID, EntityID = 1, setStudentAreaID = None, setStudentPlanID = None, setSubAreaID = None, setRelationships = None, returnStudentSubAreaID = True, returnAttemptedCredits = False, returnCanAddManualStudentSubAreaCurriculumSubArea = False, returnCanAddWaiver = False, returnCanHaveWaiver = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsFulfilledInPlan = False, returnModifiedTime = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentAreaID = False, returnStudentPlanID = False, returnSubAreaID = False, returnTotalManualCredits = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubArea/" + str(StudentSubAreaID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createStudentSubArea(EntityID = 1, setStudentAreaID = None, setStudentPlanID = None, setSubAreaID = None, setRelationships = None, returnStudentSubAreaID = True, returnAttemptedCredits = False, returnCanAddManualStudentSubAreaCurriculumSubArea = False, returnCanAddWaiver = False, returnCanHaveWaiver = False, returnCompletedCredits = False, returnCreatedTime = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsFulfilledInPlan = False, returnModifiedTime = False, returnPlannedCredits = False, returnRemainingCredits = False, returnStudentAreaID = False, returnStudentPlanID = False, returnSubAreaID = False, returnTotalManualCredits = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivedCredits = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubArea/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteStudentSubArea(StudentSubAreaID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEveryStudentSubAreaCurriculumSubArea(EntityID = 1, page = 1, pageSize = 100, returnStudentSubAreaCurriculumSubAreaID = True, returnAppliedOrder = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnEntryMethod = False, returnEntryMethodCode = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsAutomatic = False, returnModifiedTime = False, returnPlannedCredits = False, returnStudentCourseRequestID = False, returnStudentSubAreaID = False, returnTotalCredits = False, returnTotalNonAttemptedCredits = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaCurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getStudentSubAreaCurriculumSubArea(StudentSubAreaCurriculumSubAreaID, EntityID = 1, returnStudentSubAreaCurriculumSubAreaID = True, returnAppliedOrder = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnEntryMethod = False, returnEntryMethodCode = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsAutomatic = False, returnModifiedTime = False, returnPlannedCredits = False, returnStudentCourseRequestID = False, returnStudentSubAreaID = False, returnTotalCredits = False, returnTotalNonAttemptedCredits = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaCurriculumSubArea/" + str(StudentSubAreaCurriculumSubAreaID), verb = "get", return_params_list = return_params_list)
-
-def modifyStudentSubAreaCurriculumSubArea(StudentSubAreaCurriculumSubAreaID, EntityID = 1, setAppliedOrder = None, setAttemptedCredits = None, setCompletedCredits = None, setCurriculumSubAreaID = None, setEntryMethod = None, setEntryMethodCode = None, setFutureCredits = None, setInProgressCredits = None, setPlannedCredits = None, setStudentCourseRequestID = None, setStudentSubAreaID = None, setRelationships = None, returnStudentSubAreaCurriculumSubAreaID = True, returnAppliedOrder = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnEntryMethod = False, returnEntryMethodCode = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsAutomatic = False, returnModifiedTime = False, returnPlannedCredits = False, returnStudentCourseRequestID = False, returnStudentSubAreaID = False, returnTotalCredits = False, returnTotalNonAttemptedCredits = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaCurriculumSubArea/" + str(StudentSubAreaCurriculumSubAreaID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createStudentSubAreaCurriculumSubArea(EntityID = 1, setAppliedOrder = None, setAttemptedCredits = None, setCompletedCredits = None, setCurriculumSubAreaID = None, setEntryMethod = None, setEntryMethodCode = None, setFutureCredits = None, setInProgressCredits = None, setPlannedCredits = None, setStudentCourseRequestID = None, setStudentSubAreaID = None, setRelationships = None, returnStudentSubAreaCurriculumSubAreaID = True, returnAppliedOrder = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnEntryMethod = False, returnEntryMethodCode = False, returnFutureCredits = False, returnInProgressCredits = False, returnIsAutomatic = False, returnModifiedTime = False, returnPlannedCredits = False, returnStudentCourseRequestID = False, returnStudentSubAreaID = False, returnTotalCredits = False, returnTotalNonAttemptedCredits = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaCurriculumSubArea/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteStudentSubAreaCurriculumSubArea(StudentSubAreaCurriculumSubAreaID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEveryStudentSubAreaWaiver(EntityID = 1, page = 1, pageSize = 100, returnStudentSubAreaWaiverID = True, returnComment = False, returnCreatedTime = False, returnCredits = False, returnModifiedTime = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaWaiver/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getStudentSubAreaWaiver(StudentSubAreaWaiverID, EntityID = 1, returnStudentSubAreaWaiverID = True, returnComment = False, returnCreatedTime = False, returnCredits = False, returnModifiedTime = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaWaiver/" + str(StudentSubAreaWaiverID), verb = "get", return_params_list = return_params_list)
-
-def modifyStudentSubAreaWaiver(StudentSubAreaWaiverID, EntityID = 1, setComment = None, setCredits = None, setStudentSubAreaID = None, setRelationships = None, returnStudentSubAreaWaiverID = True, returnComment = False, returnCreatedTime = False, returnCredits = False, returnModifiedTime = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaWaiver/" + str(StudentSubAreaWaiverID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createStudentSubAreaWaiver(EntityID = 1, setComment = None, setCredits = None, setStudentSubAreaID = None, setRelationships = None, returnStudentSubAreaWaiverID = True, returnComment = False, returnCreatedTime = False, returnCredits = False, returnModifiedTime = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/StudentSubAreaWaiver/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteStudentSubAreaWaiver(StudentSubAreaWaiverID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEverySubArea(EntityID = 1, page = 1, pageSize = 100, returnSubAreaID = True, returnAreaID = False, returnAreaSubAreaDescription = False, returnCreatedTime = False, returnCredits = False, returnCurriculumSubAreaExistsForNonStudentCurriculum = False, returnDescription = False, returnDisplayOrder = False, returnGradReqRankGPARequiredCourseRuleOverride = False, returnGradReqRankGPARequiredCourseRuleOverrideCode = False, returnHasSkywardID = False, returnIsElective = False, returnIsSystemSubArea = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getSubArea(SubAreaID, EntityID = 1, returnSubAreaID = True, returnAreaID = False, returnAreaSubAreaDescription = False, returnCreatedTime = False, returnCredits = False, returnCurriculumSubAreaExistsForNonStudentCurriculum = False, returnDescription = False, returnDisplayOrder = False, returnGradReqRankGPARequiredCourseRuleOverride = False, returnGradReqRankGPARequiredCourseRuleOverrideCode = False, returnHasSkywardID = False, returnIsElective = False, returnIsSystemSubArea = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubArea/" + str(SubAreaID), verb = "get", return_params_list = return_params_list)
-
-def modifySubArea(SubAreaID, EntityID = 1, setAreaID = None, setCredits = None, setDescription = None, setDisplayOrder = None, setGradReqRankGPARequiredCourseRuleOverride = None, setGradReqRankGPARequiredCourseRuleOverrideCode = None, setIsElective = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnSubAreaID = True, returnAreaID = False, returnAreaSubAreaDescription = False, returnCreatedTime = False, returnCredits = False, returnCurriculumSubAreaExistsForNonStudentCurriculum = False, returnDescription = False, returnDisplayOrder = False, returnGradReqRankGPARequiredCourseRuleOverride = False, returnGradReqRankGPARequiredCourseRuleOverrideCode = False, returnHasSkywardID = False, returnIsElective = False, returnIsSystemSubArea = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubArea/" + str(SubAreaID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createSubArea(EntityID = 1, setAreaID = None, setCredits = None, setDescription = None, setDisplayOrder = None, setGradReqRankGPARequiredCourseRuleOverride = None, setGradReqRankGPARequiredCourseRuleOverrideCode = None, setIsElective = None, setSkywardHash = None, setSkywardID = None, setRelationships = None, returnSubAreaID = True, returnAreaID = False, returnAreaSubAreaDescription = False, returnCreatedTime = False, returnCredits = False, returnCurriculumSubAreaExistsForNonStudentCurriculum = False, returnDescription = False, returnDisplayOrder = False, returnGradReqRankGPARequiredCourseRuleOverride = False, returnGradReqRankGPARequiredCourseRuleOverrideCode = False, returnHasSkywardID = False, returnIsElective = False, returnIsSystemSubArea = False, returnModifiedTime = False, returnSkywardHash = False, returnSkywardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubArea/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteSubArea(SubAreaID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEverySubAreaLimitGroup(EntityID = 1, page = 1, pageSize = 100, returnSubAreaLimitGroupID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnCreditLimit = False, returnDescription = False, returnModifiedTime = False, returnSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroup/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getSubAreaLimitGroup(SubAreaLimitGroupID, EntityID = 1, returnSubAreaLimitGroupID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnCreditLimit = False, returnDescription = False, returnModifiedTime = False, returnSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroup/" + str(SubAreaLimitGroupID), verb = "get", return_params_list = return_params_list)
-
-def modifySubAreaLimitGroup(SubAreaLimitGroupID, EntityID = 1, setCode = None, setCreditLimit = None, setDescription = None, setSubAreaID = None, setRelationships = None, returnSubAreaLimitGroupID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnCreditLimit = False, returnDescription = False, returnModifiedTime = False, returnSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroup/" + str(SubAreaLimitGroupID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createSubAreaLimitGroup(EntityID = 1, setCode = None, setCreditLimit = None, setDescription = None, setSubAreaID = None, setRelationships = None, returnSubAreaLimitGroupID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnCreditLimit = False, returnDescription = False, returnModifiedTime = False, returnSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroup/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteSubAreaLimitGroup(SubAreaLimitGroupID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEverySubAreaLimitGroupCurriculumSubArea(EntityID = 1, page = 1, pageSize = 100, returnSubAreaLimitGroupCurriculumSubAreaID = True, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnModifiedTime = False, returnSubAreaLimitGroupID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroupCurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getSubAreaLimitGroupCurriculumSubArea(SubAreaLimitGroupCurriculumSubAreaID, EntityID = 1, returnSubAreaLimitGroupCurriculumSubAreaID = True, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnModifiedTime = False, returnSubAreaLimitGroupID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroupCurriculumSubArea/" + str(SubAreaLimitGroupCurriculumSubAreaID), verb = "get", return_params_list = return_params_list)
-
-def modifySubAreaLimitGroupCurriculumSubArea(SubAreaLimitGroupCurriculumSubAreaID, EntityID = 1, setCurriculumSubAreaID = None, setSubAreaLimitGroupID = None, setRelationships = None, returnSubAreaLimitGroupCurriculumSubAreaID = True, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnModifiedTime = False, returnSubAreaLimitGroupID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroupCurriculumSubArea/" + str(SubAreaLimitGroupCurriculumSubAreaID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createSubAreaLimitGroupCurriculumSubArea(EntityID = 1, setCurriculumSubAreaID = None, setSubAreaLimitGroupID = None, setRelationships = None, returnSubAreaLimitGroupCurriculumSubAreaID = True, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnModifiedTime = False, returnSubAreaLimitGroupID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/SubAreaLimitGroupCurriculumSubArea/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteSubAreaLimitGroupCurriculumSubArea(SubAreaLimitGroupCurriculumSubAreaID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEveryTempEndorsementDefault(EntityID = 1, page = 1, pageSize = 100, returnTempEndorsementDefaultID = True, returnActionType = False, returnActionTypeCode = False, returnCodeDescription = False, returnCreatedTime = False, returnEndorsementDefaultID = False, returnEndorsementID = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivable = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementDefault/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getTempEndorsementDefault(TempEndorsementDefaultID, EntityID = 1, returnTempEndorsementDefaultID = True, returnActionType = False, returnActionTypeCode = False, returnCodeDescription = False, returnCreatedTime = False, returnEndorsementDefaultID = False, returnEndorsementID = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivable = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementDefault/" + str(TempEndorsementDefaultID), verb = "get", return_params_list = return_params_list)
-
-def modifyTempEndorsementDefault(TempEndorsementDefaultID, EntityID = 1, setActionType = None, setActionTypeCode = None, setCodeDescription = None, setEndorsementDefaultID = None, setEndorsementID = None, setPrintOnTranscript = None, setWaivable = None, setRelationships = None, returnTempEndorsementDefaultID = True, returnActionType = False, returnActionTypeCode = False, returnCodeDescription = False, returnCreatedTime = False, returnEndorsementDefaultID = False, returnEndorsementID = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivable = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementDefault/" + str(TempEndorsementDefaultID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createTempEndorsementDefault(EntityID = 1, setActionType = None, setActionTypeCode = None, setCodeDescription = None, setEndorsementDefaultID = None, setEndorsementID = None, setPrintOnTranscript = None, setWaivable = None, setRelationships = None, returnTempEndorsementDefaultID = True, returnActionType = False, returnActionTypeCode = False, returnCodeDescription = False, returnCreatedTime = False, returnEndorsementDefaultID = False, returnEndorsementID = False, returnModifiedTime = False, returnPrintOnTranscript = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnWaivable = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementDefault/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteTempEndorsementDefault(TempEndorsementDefaultID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEveryTempEndorsementImportError(EntityID = 1, page = 1, pageSize = 100, returnTempEndorsementImportErrorID = True, returnCodeDescription = False, returnCreatedTime = False, returnErrorString = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementImportError/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getTempEndorsementImportError(TempEndorsementImportErrorID, EntityID = 1, returnTempEndorsementImportErrorID = True, returnCodeDescription = False, returnCreatedTime = False, returnErrorString = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementImportError/" + str(TempEndorsementImportErrorID), verb = "get", return_params_list = return_params_list)
-
-def modifyTempEndorsementImportError(TempEndorsementImportErrorID, EntityID = 1, setCodeDescription = None, setErrorString = None, setRelationships = None, returnTempEndorsementImportErrorID = True, returnCodeDescription = False, returnCreatedTime = False, returnErrorString = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementImportError/" + str(TempEndorsementImportErrorID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createTempEndorsementImportError(EntityID = 1, setCodeDescription = None, setErrorString = None, setRelationships = None, returnTempEndorsementImportErrorID = True, returnCodeDescription = False, returnCreatedTime = False, returnErrorString = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempEndorsementImportError/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteTempEndorsementImportError(TempEndorsementImportErrorID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEveryTempFailedStudentSubAreaCurriculumSubArea(EntityID = 1, page = 1, pageSize = 100, returnTempFailedStudentSubAreaCurriculumSubAreaID = True, returnActionType = False, returnAppliedOrder = False, returnAreaSubAreaDescription = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCourseCode = False, returnCourseDescription = False, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnEntityCode = False, returnFutureCredits = False, returnInProgressCredits = False, returnModifiedTime = False, returnNote = False, returnSchoolYearDescription = False, returnSectionCode = False, returnStudentCourseRequestID = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaCurriculumSubArea/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getTempFailedStudentSubAreaCurriculumSubArea(TempFailedStudentSubAreaCurriculumSubAreaID, EntityID = 1, returnTempFailedStudentSubAreaCurriculumSubAreaID = True, returnActionType = False, returnAppliedOrder = False, returnAreaSubAreaDescription = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCourseCode = False, returnCourseDescription = False, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnEntityCode = False, returnFutureCredits = False, returnInProgressCredits = False, returnModifiedTime = False, returnNote = False, returnSchoolYearDescription = False, returnSectionCode = False, returnStudentCourseRequestID = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaCurriculumSubArea/" + str(TempFailedStudentSubAreaCurriculumSubAreaID), verb = "get", return_params_list = return_params_list)
-
-def modifyTempFailedStudentSubAreaCurriculumSubArea(TempFailedStudentSubAreaCurriculumSubAreaID, EntityID = 1, setActionType = None, setAppliedOrder = None, setAreaSubAreaDescription = None, setAttemptedCredits = None, setCompletedCredits = None, setCourseCode = None, setCourseDescription = None, setCurriculumSubAreaID = None, setEntityCode = None, setFutureCredits = None, setInProgressCredits = None, setNote = None, setSchoolYearDescription = None, setSectionCode = None, setStudentCourseRequestID = None, setStudentSubAreaID = None, setRelationships = None, returnTempFailedStudentSubAreaCurriculumSubAreaID = True, returnActionType = False, returnAppliedOrder = False, returnAreaSubAreaDescription = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCourseCode = False, returnCourseDescription = False, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnEntityCode = False, returnFutureCredits = False, returnInProgressCredits = False, returnModifiedTime = False, returnNote = False, returnSchoolYearDescription = False, returnSectionCode = False, returnStudentCourseRequestID = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaCurriculumSubArea/" + str(TempFailedStudentSubAreaCurriculumSubAreaID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createTempFailedStudentSubAreaCurriculumSubArea(EntityID = 1, setActionType = None, setAppliedOrder = None, setAreaSubAreaDescription = None, setAttemptedCredits = None, setCompletedCredits = None, setCourseCode = None, setCourseDescription = None, setCurriculumSubAreaID = None, setEntityCode = None, setFutureCredits = None, setInProgressCredits = None, setNote = None, setSchoolYearDescription = None, setSectionCode = None, setStudentCourseRequestID = None, setStudentSubAreaID = None, setRelationships = None, returnTempFailedStudentSubAreaCurriculumSubAreaID = True, returnActionType = False, returnAppliedOrder = False, returnAreaSubAreaDescription = False, returnAttemptedCredits = False, returnCompletedCredits = False, returnCourseCode = False, returnCourseDescription = False, returnCreatedTime = False, returnCurriculumSubAreaID = False, returnEntityCode = False, returnFutureCredits = False, returnInProgressCredits = False, returnModifiedTime = False, returnNote = False, returnSchoolYearDescription = False, returnSectionCode = False, returnStudentCourseRequestID = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaCurriculumSubArea/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteTempFailedStudentSubAreaCurriculumSubArea(TempFailedStudentSubAreaCurriculumSubAreaID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
-
-def getEveryTempFailedStudentSubAreaWaiver(EntityID = 1, page = 1, pageSize = 100, returnTempFailedStudentSubAreaWaiverID = True, returnActionType = False, returnAreaSubAreaDescription = False, returnCreatedTime = False, returnCredits = False, returnModifiedTime = False, returnNote = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaWaiver/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
-
-def getTempFailedStudentSubAreaWaiver(TempFailedStudentSubAreaWaiverID, EntityID = 1, returnTempFailedStudentSubAreaWaiverID = True, returnActionType = False, returnAreaSubAreaDescription = False, returnCreatedTime = False, returnCredits = False, returnModifiedTime = False, returnNote = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaWaiver/" + str(TempFailedStudentSubAreaWaiverID), verb = "get", return_params_list = return_params_list)
-
-def modifyTempFailedStudentSubAreaWaiver(TempFailedStudentSubAreaWaiverID, EntityID = 1, setActionType = None, setAreaSubAreaDescription = None, setCredits = None, setNote = None, setStudentSubAreaID = None, setRelationships = None, returnTempFailedStudentSubAreaWaiverID = True, returnActionType = False, returnAreaSubAreaDescription = False, returnCreatedTime = False, returnCredits = False, returnModifiedTime = False, returnNote = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaWaiver/" + str(TempFailedStudentSubAreaWaiverID), verb = "post", return_params_list = return_params_list, payload = payload_params)
-
-def createTempFailedStudentSubAreaWaiver(EntityID = 1, setActionType = None, setAreaSubAreaDescription = None, setCredits = None, setNote = None, setStudentSubAreaID = None, setRelationships = None, returnTempFailedStudentSubAreaWaiverID = True, returnActionType = False, returnAreaSubAreaDescription = False, returnCreatedTime = False, returnCredits = False, returnModifiedTime = False, returnNote = False, returnStudentSubAreaID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
-
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
-
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
-
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaWaiver/", verb = "put", return_params_list = return_params_list, payload = payload_params)
-
-def deleteTempFailedStudentSubAreaWaiver(TempFailedStudentSubAreaWaiverID, EntityID = 1):
-
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/GraduationRequirements/TempFailedStudentSubAreaWaiver/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)

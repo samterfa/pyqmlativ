@@ -1,6 +1,6 @@
 # This module contains District functions.
 
-from .Utilities import make_request
+from .Utilities import *
 
 import pandas as pd
 
@@ -8,992 +8,761 @@ import json
 
 import re
 
-def getEveryBuilding(EntityID = 1, page = 1, pageSize = 100, returnBuildingID = True, returnAccountDistributionString = False, returnAddressID = False, returnBuildingMNID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnFederalNCESSchoolID = False, returnMaximumStudentCount = False, returnMinimumStudentCount = False, returnModifiedTime = False, returnOptimumStudentCount = False, returnParcelNumber = False, returnSTARSchoolNumber = False, returnUnemploymentInsuranceUnitLocation = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryBuilding(searchConditions = [], EntityID = 1, returnBuildingID = False, returnAccountDistributionString = False, returnAddressID = False, returnBuildingMNID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnFederalNCESSchoolID = False, returnMaximumStudentCount = False, returnMinimumStudentCount = False, returnModifiedTime = False, returnOptimumStudentCount = False, returnParcelNumber = False, returnSTARSchoolNumber = False, returnUnemploymentInsuranceUnitLocation = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every Building in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Building/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every Building in the district filtered by search conditions.
 
-def getBuilding(BuildingID, EntityID = 1, returnBuildingID = True, returnAccountDistributionString = False, returnAddressID = False, returnBuildingMNID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnFederalNCESSchoolID = False, returnMaximumStudentCount = False, returnMinimumStudentCount = False, returnModifiedTime = False, returnOptimumStudentCount = False, returnParcelNumber = False, returnSTARSchoolNumber = False, returnUnemploymentInsuranceUnitLocation = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Building/" + str(BuildingID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyBuilding(BuildingID, EntityID = 1, setAddressID = None, setCode = None, setDescription = None, setDistrictID = None, setFederalNCESSchoolID = None, setMaximumStudentCount = None, setMinimumStudentCount = None, setOptimumStudentCount = None, setParcelNumber = None, setSTARSchoolNumber = None, setUnemploymentInsuranceUnitLocation = None, setRelationships = None, returnBuildingID = True, returnAccountDistributionString = False, returnAddressID = False, returnBuildingMNID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnFederalNCESSchoolID = False, returnMaximumStudentCount = False, returnMinimumStudentCount = False, returnModifiedTime = False, returnOptimumStudentCount = False, returnParcelNumber = False, returnSTARSchoolNumber = False, returnUnemploymentInsuranceUnitLocation = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Building/" + str(BuildingID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createBuilding(EntityID = 1, setAddressID = None, setCode = None, setDescription = None, setDistrictID = None, setFederalNCESSchoolID = None, setMaximumStudentCount = None, setMinimumStudentCount = None, setOptimumStudentCount = None, setParcelNumber = None, setSTARSchoolNumber = None, setUnemploymentInsuranceUnitLocation = None, setRelationships = None, returnBuildingID = True, returnAccountDistributionString = False, returnAddressID = False, returnBuildingMNID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnFederalNCESSchoolID = False, returnMaximumStudentCount = False, returnMinimumStudentCount = False, returnModifiedTime = False, returnOptimumStudentCount = False, returnParcelNumber = False, returnSTARSchoolNumber = False, returnUnemploymentInsuranceUnitLocation = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Building/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Building/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryCalendarYear(searchConditions = [], EntityID = 1, returnCalendarYearID = False, returnCreatedTime = False, returnDescription = False, returnModifiedTime = False, returnNumericYear = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Building/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every CalendarYear in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	This function returns a dataframe of every CalendarYear in the district filtered by search conditions.
 
-def getEveryCalendarYear(EntityID = 1, page = 1, pageSize = 100, returnCalendarYearID = True, returnCreatedTime = False, returnDescription = False, returnModifiedTime = False, returnNumericYear = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/CalendarYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def getCalendarYear(CalendarYearID, EntityID = 1, returnCalendarYearID = True, returnCreatedTime = False, returnDescription = False, returnModifiedTime = False, returnNumericYear = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	if len(searchConditions) > 0:
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/CalendarYear/" + str(CalendarYearID), verb = "get", return_params_list = return_params_list)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-def modifyCalendarYear(CalendarYearID, EntityID = 1, setDescription = None, setNumericYear = None, setRelationships = None, returnCalendarYearID = True, returnCreatedTime = False, returnDescription = False, returnModifiedTime = False, returnNumericYear = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/CalendarYear/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/CalendarYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/CalendarYear/" + str(CalendarYearID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+def getEveryConfigEntityYear(searchConditions = [], EntityID = 1, returnConfigEntityYearID = False, returnConfigEntityYearIDClonedFrom = False, returnCreatedTime = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-def createCalendarYear(EntityID = 1, setDescription = None, setNumericYear = None, setRelationships = None, returnCalendarYearID = True, returnCreatedTime = False, returnDescription = False, returnModifiedTime = False, returnNumericYear = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""Get every ConfigEntityYear in the district.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	This function returns a dataframe of every ConfigEntityYear in the district filtered by search conditions.
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	"""
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = locals()
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/CalendarYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def getEveryConfigEntityYear(EntityID = 1, page = 1, pageSize = 100, returnConfigEntityYearID = True, returnConfigEntityYearIDClonedFrom = False, returnCreatedTime = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	if len(searchConditions) > 0:
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/ConfigEntityYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-def getConfigEntityYear(ConfigEntityYearID, EntityID = 1, returnConfigEntityYearID = True, returnConfigEntityYearIDClonedFrom = False, returnCreatedTime = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/ConfigEntityYear/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/ConfigEntityYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/ConfigEntityYear/" + str(ConfigEntityYearID), verb = "get", return_params_list = return_params_list)
 
-def modifyConfigEntityYear(ConfigEntityYearID, EntityID = 1, setConfigEntityYearIDClonedFrom = None, setEntityID = None, setSchoolYearID = None, setRelationships = None, returnConfigEntityYearID = True, returnConfigEntityYearIDClonedFrom = False, returnCreatedTime = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+def getEveryDistrictGroup(searchConditions = [], EntityID = 1, returnDistrictGroupID = False, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""Get every DistrictGroup in the district.
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	This function returns a dataframe of every DistrictGroup in the district filtered by search conditions.
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	"""
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/ConfigEntityYear/" + str(ConfigEntityYearID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	params = locals()
 
-def createConfigEntityYear(EntityID = 1, setConfigEntityYearIDClonedFrom = None, setEntityID = None, setSchoolYearID = None, setRelationships = None, returnConfigEntityYearID = True, returnConfigEntityYearIDClonedFrom = False, returnCreatedTime = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/ConfigEntityYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	if len(searchConditions) > 0:
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-def getEveryDistrictGroup(EntityID = 1, page = 1, pageSize = 100, returnDistrictGroupID = True, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictGroup/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictGroup/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictGroup/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
 
-def getDistrictGroup(DistrictGroupID, EntityID = 1, returnDistrictGroupID = True, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+def getEveryDistrict(searchConditions = [], EntityID = 1, returnDistrictID = False, returnBuildingID = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeBySchoolYear = False, returnDistrictGroupID = False, returnDistrictMNID = False, returnDistrictNumber = False, returnFaxNumber = False, returnFaxNumberIsInternational = False, returnFormattedPhoneNumber = False, returnIsCurrentlySelected = False, returnModifiedTime = False, returnName = False, returnNCESIDCode = False, returnPhoneNumber = False, returnPhoneNumberIsInternational = False, returnRCDTCodeBySchoolYear = False, returnStaffIDSuperintendent = False, returnStateDistrictCode = False, returnStateDistrictMNID = False, returnStateDistrictTypeCodeMNID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""Get every District in the district.
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	This function returns a dataframe of every District in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictGroup/" + str(DistrictGroupID), verb = "get", return_params_list = return_params_list)
+	"""
 
-def modifyDistrictGroup(DistrictGroupID, EntityID = 1, setName = None, setRelationships = None, returnDistrictGroupID = True, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictGroup/" + str(DistrictGroupID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def createDistrictGroup(EntityID = 1, setName = None, setRelationships = None, returnDistrictGroupID = True, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/District/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictGroup/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/District/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
 
-def getEveryDistrict(EntityID = 1, page = 1, pageSize = 100, returnDistrictID = True, returnBuildingID = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeBySchoolYear = False, returnDistrictGroupID = False, returnDistrictMNID = False, returnDistrictNumber = False, returnFaxNumber = False, returnFaxNumberIsInternational = False, returnFormattedPhoneNumber = False, returnModifiedTime = False, returnName = False, returnNCESIDCode = False, returnPhoneNumber = False, returnPhoneNumberIsInternational = False, returnRCDTCodeBySchoolYear = False, returnStaffIDSuperintendent = False, returnStateDistrictCode = False, returnStateDistrictMNID = False, returnStateDistrictTypeCodeMNID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+def getEveryDistrictSchoolYear(searchConditions = [], EntityID = 1, returnDistrictSchoolYearID = False, returnCreatedTime = False, returnDistrictID = False, returnDistrictSchoolYearIDClonedFrom = False, returnEdFiDistrictID = False, returnHarassmentPolicyWebLink = False, returnHasDesegregationPlan = False, returnHasDistanceEducation = False, returnHasEarlyChildhood = False, returnHasEarlyChildhoodNonIDEA = False, returnHasGEDPreparationProgram = False, returnHasHarassmentPolicy = False, returnHasKindergarten = False, returnHasKindergartenFullDayCost = False, returnHasKindergartenFullDayFree = False, returnHasKindergartenPartDayCost = False, returnHasKindergartenPartDayFree = False, returnHasPreschool = False, returnHasPreschoolAllChildren = False, returnHasPreschoolFullDayCost = False, returnHasPreschoolFullDayFree = False, returnHasPreschoolIDEA = False, returnHasPreschoolLowIncome = False, returnHasPreschoolPartDayCost = False, returnHasPreschoolPartDayFree = False, returnHasPreschoolTitleI = False, returnIsCRDCCollectedForSchoolYear = False, returnModifiedTime = False, returnNameIDDisability = False, returnNameIDRace = False, returnNameIDSex = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""Get every DistrictSchoolYear in the district.
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	This function returns a dataframe of every DistrictSchoolYear in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/District/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	"""
 
-def getDistrict(DistrictID, EntityID = 1, returnDistrictID = True, returnBuildingID = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeBySchoolYear = False, returnDistrictGroupID = False, returnDistrictMNID = False, returnDistrictNumber = False, returnFaxNumber = False, returnFaxNumberIsInternational = False, returnFormattedPhoneNumber = False, returnModifiedTime = False, returnName = False, returnNCESIDCode = False, returnPhoneNumber = False, returnPhoneNumberIsInternational = False, returnRCDTCodeBySchoolYear = False, returnStaffIDSuperintendent = False, returnStateDistrictCode = False, returnStateDistrictMNID = False, returnStateDistrictTypeCodeMNID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/District/" + str(DistrictID), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def modifyDistrict(DistrictID, EntityID = 1, setBuildingID = None, setDistrictGroupID = None, setDistrictNumber = None, setFaxNumber = None, setFaxNumberIsInternational = None, setName = None, setNCESIDCode = None, setPhoneNumber = None, setPhoneNumberIsInternational = None, setStaffIDSuperintendent = None, setStateDistrictMNID = None, setStateDistrictTypeCodeMNID = None, setRelationships = None, returnDistrictID = True, returnBuildingID = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeBySchoolYear = False, returnDistrictGroupID = False, returnDistrictMNID = False, returnDistrictNumber = False, returnFaxNumber = False, returnFaxNumberIsInternational = False, returnFormattedPhoneNumber = False, returnModifiedTime = False, returnName = False, returnNCESIDCode = False, returnPhoneNumber = False, returnPhoneNumberIsInternational = False, returnRCDTCodeBySchoolYear = False, returnStaffIDSuperintendent = False, returnStateDistrictCode = False, returnStateDistrictMNID = False, returnStateDistrictTypeCodeMNID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/District/" + str(DistrictID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictSchoolYear/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def createDistrict(EntityID = 1, setBuildingID = None, setDistrictGroupID = None, setDistrictNumber = None, setFaxNumber = None, setFaxNumberIsInternational = None, setName = None, setNCESIDCode = None, setPhoneNumber = None, setPhoneNumberIsInternational = None, setStaffIDSuperintendent = None, setStateDistrictMNID = None, setStateDistrictTypeCodeMNID = None, setRelationships = None, returnDistrictID = True, returnBuildingID = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeBySchoolYear = False, returnDistrictGroupID = False, returnDistrictMNID = False, returnDistrictNumber = False, returnFaxNumber = False, returnFaxNumberIsInternational = False, returnFormattedPhoneNumber = False, returnModifiedTime = False, returnName = False, returnNCESIDCode = False, returnPhoneNumber = False, returnPhoneNumberIsInternational = False, returnRCDTCodeBySchoolYear = False, returnStaffIDSuperintendent = False, returnStateDistrictCode = False, returnStateDistrictMNID = False, returnStateDistrictTypeCodeMNID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictSchoolYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+def getEveryEntityCloneDestination(searchConditions = [], EntityID = 1, returnEntityCloneDestinationID = False, returnCreatedTime = False, returnEntityCloneRunID = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	"""Get every EntityCloneDestination in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/District/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	This function returns a dataframe of every EntityCloneDestination in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""
 
-def getEveryDistrictSchoolYear(EntityID = 1, page = 1, pageSize = 100, returnDistrictSchoolYearID = True, returnCreatedTime = False, returnDistrictID = False, returnDistrictSchoolYearIDClonedFrom = False, returnEdFiDistrictID = False, returnHarassmentPolicyWebLink = False, returnHasDesegregationPlan = False, returnHasDistanceEducation = False, returnHasEarlyChildhood = False, returnHasEarlyChildhoodNonIDEA = False, returnHasGEDPreparationProgram = False, returnHasHarassmentPolicy = False, returnHasKindergarten = False, returnHasKindergartenFullDayCost = False, returnHasKindergartenFullDayFree = False, returnHasKindergartenPartDayCost = False, returnHasKindergartenPartDayFree = False, returnHasPreschool = False, returnHasPreschoolAllChildren = False, returnHasPreschoolFullDayCost = False, returnHasPreschoolFullDayFree = False, returnHasPreschoolIDEA = False, returnHasPreschoolLowIncome = False, returnHasPreschoolPartDayCost = False, returnHasPreschoolPartDayFree = False, returnHasPreschoolTitleI = False, returnIsCRDCCollectedForSchoolYear = False, returnModifiedTime = False, returnNameIDDisability = False, returnNameIDRace = False, returnNameIDSex = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictSchoolYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getDistrictSchoolYear(DistrictSchoolYearID, EntityID = 1, returnDistrictSchoolYearID = True, returnCreatedTime = False, returnDistrictID = False, returnDistrictSchoolYearIDClonedFrom = False, returnEdFiDistrictID = False, returnHarassmentPolicyWebLink = False, returnHasDesegregationPlan = False, returnHasDistanceEducation = False, returnHasEarlyChildhood = False, returnHasEarlyChildhoodNonIDEA = False, returnHasGEDPreparationProgram = False, returnHasHarassmentPolicy = False, returnHasKindergarten = False, returnHasKindergartenFullDayCost = False, returnHasKindergartenFullDayFree = False, returnHasKindergartenPartDayCost = False, returnHasKindergartenPartDayFree = False, returnHasPreschool = False, returnHasPreschoolAllChildren = False, returnHasPreschoolFullDayCost = False, returnHasPreschoolFullDayFree = False, returnHasPreschoolIDEA = False, returnHasPreschoolLowIncome = False, returnHasPreschoolPartDayCost = False, returnHasPreschoolPartDayFree = False, returnHasPreschoolTitleI = False, returnIsCRDCCollectedForSchoolYear = False, returnModifiedTime = False, returnNameIDDisability = False, returnNameIDRace = False, returnNameIDSex = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictSchoolYear/" + str(DistrictSchoolYearID), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def modifyDistrictSchoolYear(DistrictSchoolYearID, EntityID = 1, setDistrictID = None, setDistrictSchoolYearIDClonedFrom = None, setEdFiDistrictID = None, setHarassmentPolicyWebLink = None, setHasDesegregationPlan = None, setHasDistanceEducation = None, setHasEarlyChildhood = None, setHasEarlyChildhoodNonIDEA = None, setHasGEDPreparationProgram = None, setHasHarassmentPolicy = None, setHasKindergarten = None, setHasKindergartenFullDayCost = None, setHasKindergartenFullDayFree = None, setHasKindergartenPartDayCost = None, setHasKindergartenPartDayFree = None, setHasPreschool = None, setHasPreschoolAllChildren = None, setHasPreschoolFullDayCost = None, setHasPreschoolFullDayFree = None, setHasPreschoolIDEA = None, setHasPreschoolLowIncome = None, setHasPreschoolPartDayCost = None, setHasPreschoolPartDayFree = None, setHasPreschoolTitleI = None, setNameIDDisability = None, setNameIDRace = None, setNameIDSex = None, setSchoolYearID = None, setRelationships = None, returnDistrictSchoolYearID = True, returnCreatedTime = False, returnDistrictID = False, returnDistrictSchoolYearIDClonedFrom = False, returnEdFiDistrictID = False, returnHarassmentPolicyWebLink = False, returnHasDesegregationPlan = False, returnHasDistanceEducation = False, returnHasEarlyChildhood = False, returnHasEarlyChildhoodNonIDEA = False, returnHasGEDPreparationProgram = False, returnHasHarassmentPolicy = False, returnHasKindergarten = False, returnHasKindergartenFullDayCost = False, returnHasKindergartenFullDayFree = False, returnHasKindergartenPartDayCost = False, returnHasKindergartenPartDayFree = False, returnHasPreschool = False, returnHasPreschoolAllChildren = False, returnHasPreschoolFullDayCost = False, returnHasPreschoolFullDayFree = False, returnHasPreschoolIDEA = False, returnHasPreschoolLowIncome = False, returnHasPreschoolPartDayCost = False, returnHasPreschoolPartDayFree = False, returnHasPreschoolTitleI = False, returnIsCRDCCollectedForSchoolYear = False, returnModifiedTime = False, returnNameIDDisability = False, returnNameIDRace = False, returnNameIDSex = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityCloneDestination/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityCloneDestination/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryEntityCloneError(searchConditions = [], EntityID = 1, returnEntityCloneErrorID = False, returnAttemptedOperation = False, returnAttemptedOperationCode = False, returnCreatedTime = False, returnEntityCloneSelectedObjectID = False, returnEntityIDTarget = False, returnMessage = False, returnModifiedTime = False, returnObjectJSON = False, returnSchoolYearIDTarget = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictSchoolYear/" + str(DistrictSchoolYearID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""Get every EntityCloneError in the district.
 
-def createDistrictSchoolYear(EntityID = 1, setDistrictID = None, setDistrictSchoolYearIDClonedFrom = None, setEdFiDistrictID = None, setHarassmentPolicyWebLink = None, setHasDesegregationPlan = None, setHasDistanceEducation = None, setHasEarlyChildhood = None, setHasEarlyChildhoodNonIDEA = None, setHasGEDPreparationProgram = None, setHasHarassmentPolicy = None, setHasKindergarten = None, setHasKindergartenFullDayCost = None, setHasKindergartenFullDayFree = None, setHasKindergartenPartDayCost = None, setHasKindergartenPartDayFree = None, setHasPreschool = None, setHasPreschoolAllChildren = None, setHasPreschoolFullDayCost = None, setHasPreschoolFullDayFree = None, setHasPreschoolIDEA = None, setHasPreschoolLowIncome = None, setHasPreschoolPartDayCost = None, setHasPreschoolPartDayFree = None, setHasPreschoolTitleI = None, setNameIDDisability = None, setNameIDRace = None, setNameIDSex = None, setSchoolYearID = None, setRelationships = None, returnDistrictSchoolYearID = True, returnCreatedTime = False, returnDistrictID = False, returnDistrictSchoolYearIDClonedFrom = False, returnEdFiDistrictID = False, returnHarassmentPolicyWebLink = False, returnHasDesegregationPlan = False, returnHasDistanceEducation = False, returnHasEarlyChildhood = False, returnHasEarlyChildhoodNonIDEA = False, returnHasGEDPreparationProgram = False, returnHasHarassmentPolicy = False, returnHasKindergarten = False, returnHasKindergartenFullDayCost = False, returnHasKindergartenFullDayFree = False, returnHasKindergartenPartDayCost = False, returnHasKindergartenPartDayFree = False, returnHasPreschool = False, returnHasPreschoolAllChildren = False, returnHasPreschoolFullDayCost = False, returnHasPreschoolFullDayFree = False, returnHasPreschoolIDEA = False, returnHasPreschoolLowIncome = False, returnHasPreschoolPartDayCost = False, returnHasPreschoolPartDayFree = False, returnHasPreschoolTitleI = False, returnIsCRDCCollectedForSchoolYear = False, returnModifiedTime = False, returnNameIDDisability = False, returnNameIDRace = False, returnNameIDSex = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EntityCloneError in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/DistrictSchoolYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def getEveryEntityGroup(EntityID = 1, page = 1, pageSize = 100, returnEntityGroupID = True, returnCreatedTime = False, returnDistrictID = False, returnModifiedTime = False, returnName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroup/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def getEntityGroup(EntityGroupID, EntityID = 1, returnEntityGroupID = True, returnCreatedTime = False, returnDistrictID = False, returnModifiedTime = False, returnName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityCloneError/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityCloneError/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroup/" + str(EntityGroupID), verb = "get", return_params_list = return_params_list)
+def getEveryEntityCloneRun(searchConditions = [], EntityID = 1, returnEntityCloneRunID = False, returnCreatedTime = False, returnEntityIDSource = False, returnMediaID = False, returnModifiedTime = False, returnSchoolYearIDSource = False, returnStatus = False, returnStatusCode = False, returnTargetEntities = False, returnTargetYears = False, returnTotalRecordsAdded = False, returnTotalRecordsDeleted = False, returnTotalRecordsErrored = False, returnTotalRecordsUpdated = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-def modifyEntityGroup(EntityGroupID, EntityID = 1, setDistrictID = None, setName = None, setRelationships = None, returnEntityGroupID = True, returnCreatedTime = False, returnDistrictID = False, returnModifiedTime = False, returnName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""Get every EntityCloneRun in the district.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	This function returns a dataframe of every EntityCloneRun in the district filtered by search conditions.
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	"""
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = locals()
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroup/" + str(EntityGroupID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-def createEntityGroup(EntityID = 1, setDistrictID = None, setName = None, setRelationships = None, returnEntityGroupID = True, returnCreatedTime = False, returnDistrictID = False, returnModifiedTime = False, returnName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	if len(searchConditions) > 0:
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroup/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def getEveryEntityGroupEntity(EntityID = 1, page = 1, pageSize = 100, returnEntityGroupEntityID = True, returnCreatedTime = False, returnEntityGroupID = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityCloneRun/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityCloneRun/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupEntity/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+def getEveryEntityCloneSelectedObject(searchConditions = [], EntityID = 1, returnEntityCloneSelectedObjectID = False, returnCloneOrder = False, returnCreatedTime = False, returnDependencies = False, returnEntityCloneRunID = False, returnIsAdding = False, returnIsDeleting = False, returnIsUpdating = False, returnModifiedTime = False, returnNumberOfRecordsAdded = False, returnNumberOfRecordsDeleted = False, returnNumberOfRecordsErrored = False, returnNumberOfRecordsExported = False, returnNumberOfRecordsUpdated = False, returnObjectID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-def getEntityGroupEntity(EntityGroupEntityID, EntityID = 1, returnEntityGroupEntityID = True, returnCreatedTime = False, returnEntityGroupID = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""Get every EntityCloneSelectedObject in the district.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	This function returns a dataframe of every EntityCloneSelectedObject in the district filtered by search conditions.
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupEntity/" + str(EntityGroupEntityID), verb = "get", return_params_list = return_params_list)
+	params = locals()
 
-def modifyEntityGroupEntity(EntityGroupEntityID, EntityID = 1, setEntityGroupID = None, setEntityID = None, setSchoolYearID = None, setRelationships = None, returnEntityGroupEntityID = True, returnCreatedTime = False, returnEntityGroupID = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupEntity/" + str(EntityGroupEntityID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	if len(searchConditions) > 0:
 
-def createEntityGroupEntity(EntityID = 1, setEntityGroupID = None, setEntityID = None, setSchoolYearID = None, setRelationships = None, returnEntityGroupEntityID = True, returnCreatedTime = False, returnEntityGroupID = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityCloneSelectedObject/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityCloneSelectedObject/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupEntity/", verb = "put", return_params_list = return_params_list, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+def getEveryEntityCloneSelection(searchConditions = [], EntityID = 1, returnEntityCloneSelectionID = False, returnCreatedTime = False, returnDependencies = False, returnEntityCloneRunID = False, returnIsAdding = False, returnIsDeleting = False, returnIsUpdating = False, returnModifiedTime = False, returnModuleID = False, returnObjectName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-def getEveryEntityGroupSetup(EntityID = 1, page = 1, pageSize = 100, returnEntityGroupSetupID = True, returnCreatedTime = False, returnEffectiveGroupName = False, returnEntityGroupID = False, returnEntityIDPrimary = False, returnHasBeenProcessed = False, returnModifiedTime = False, returnNewGroupName = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""Get every EntityCloneSelection in the district.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	This function returns a dataframe of every EntityCloneSelection in the district filtered by search conditions.
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetup/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	params = locals()
 
-def getEntityGroupSetup(EntityGroupSetupID, EntityID = 1, returnEntityGroupSetupID = True, returnCreatedTime = False, returnEffectiveGroupName = False, returnEntityGroupID = False, returnEntityIDPrimary = False, returnHasBeenProcessed = False, returnModifiedTime = False, returnNewGroupName = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetup/" + str(EntityGroupSetupID), verb = "get", return_params_list = return_params_list)
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def modifyEntityGroupSetup(EntityGroupSetupID, EntityID = 1, setEntityGroupID = None, setEntityIDPrimary = None, setHasBeenProcessed = None, setNewGroupName = None, setSchoolYearID = None, setRelationships = None, returnEntityGroupSetupID = True, returnCreatedTime = False, returnEffectiveGroupName = False, returnEntityGroupID = False, returnEntityIDPrimary = False, returnHasBeenProcessed = False, returnModifiedTime = False, returnNewGroupName = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityCloneSelection/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetup/" + str(EntityGroupSetupID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityCloneSelection/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def createEntityGroupSetup(EntityID = 1, setEntityGroupID = None, setEntityIDPrimary = None, setHasBeenProcessed = None, setNewGroupName = None, setSchoolYearID = None, setRelationships = None, returnEntityGroupSetupID = True, returnCreatedTime = False, returnEffectiveGroupName = False, returnEntityGroupID = False, returnEntityIDPrimary = False, returnHasBeenProcessed = False, returnModifiedTime = False, returnNewGroupName = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryEntityGroup(searchConditions = [], EntityID = 1, returnEntityGroupID = False, returnCreatedTime = False, returnDistrictID = False, returnModifiedTime = False, returnName = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	"""Get every EntityGroup in the district.
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	This function returns a dataframe of every EntityGroup in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetup/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	params = locals()
 
-def getEveryEntityGroupSetupEntity(EntityID = 1, page = 1, pageSize = 100, returnEntityGroupSetupEntityID = True, returnCreatedTime = False, returnEntityGroupSetupID = False, returnEntityID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupEntity/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEntityGroupSetupEntity(EntityGroupSetupEntityID, EntityID = 1, returnEntityGroupSetupEntityID = True, returnCreatedTime = False, returnEntityGroupSetupID = False, returnEntityID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupEntity/" + str(EntityGroupSetupEntityID), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroup/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def modifyEntityGroupSetupEntity(EntityGroupSetupEntityID, EntityID = 1, setEntityGroupSetupID = None, setEntityID = None, setRelationships = None, returnEntityGroupSetupEntityID = True, returnCreatedTime = False, returnEntityGroupSetupID = False, returnEntityID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroup/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+def getEveryEntityGroupEntity(searchConditions = [], EntityID = 1, returnEntityGroupEntityID = False, returnCreatedTime = False, returnEntityGroupID = False, returnEntityID = False, returnModifiedTime = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	"""Get every EntityGroupEntity in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupEntity/" + str(EntityGroupSetupEntityID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	This function returns a dataframe of every EntityGroupEntity in the district filtered by search conditions.
 
-def createEntityGroupSetupEntity(EntityID = 1, setEntityGroupSetupID = None, setEntityID = None, setRelationships = None, returnEntityGroupSetupEntityID = True, returnCreatedTime = False, returnEntityGroupSetupID = False, returnEntityID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupEntity/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-def getEveryEntityGroupSetupRun(EntityID = 1, page = 1, pageSize = 100, returnEntityGroupSetupRunID = True, returnCreatedTime = False, returnEntityGroupSetupID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if len(searchConditions) > 0:
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRun/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupEntity/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getEntityGroupSetupRun(EntityGroupSetupRunID, EntityID = 1, returnEntityGroupSetupRunID = True, returnCreatedTime = False, returnEntityGroupSetupID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupEntity/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryEntityGroupSetup(searchConditions = [], EntityID = 1, returnEntityGroupSetupID = False, returnCreatedTime = False, returnEffectiveGroupName = False, returnEntityGroupID = False, returnEntityIDPrimary = False, returnHasBeenProcessed = False, returnModifiedTime = False, returnNewGroupName = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRun/" + str(EntityGroupSetupRunID), verb = "get", return_params_list = return_params_list)
+	"""Get every EntityGroupSetup in the district.
 
-def modifyEntityGroupSetupRun(EntityGroupSetupRunID, EntityID = 1, setEntityGroupSetupID = None, setRelationships = None, returnEntityGroupSetupRunID = True, returnCreatedTime = False, returnEntityGroupSetupID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EntityGroupSetup in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = locals()
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRun/" + str(EntityGroupSetupRunID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def createEntityGroupSetupRun(EntityID = 1, setEntityGroupSetupID = None, setRelationships = None, returnEntityGroupSetupRunID = True, returnCreatedTime = False, returnEntityGroupSetupID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRun/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetup/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-def getEveryEntityGroupSetupRunDetail(EntityID = 1, page = 1, pageSize = 100, returnEntityGroupSetupRunDetailID = True, returnChangeType = False, returnChangeTypeCode = False, returnCreatedTime = False, returnEntityGroupKey = False, returnEntityGroupSetupRunID = False, returnEntityID = False, returnError = False, returnIdentifyingFields = False, returnIsProcessed = False, returnIsUpdated = False, returnModifiedTime = False, returnModule = False, returnNewFieldValues = False, returnNewValues = False, returnObject = False, returnObjectPrimaryKey = False, returnOriginalValues = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetup/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+def getEveryEntityGroupSetupEntity(searchConditions = [], EntityID = 1, returnEntityGroupSetupEntityID = False, returnCreatedTime = False, returnEntityGroupSetupID = False, returnEntityID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRunDetail/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	"""Get every EntityGroupSetupEntity in the district.
 
-def getEntityGroupSetupRunDetail(EntityGroupSetupRunDetailID, EntityID = 1, returnEntityGroupSetupRunDetailID = True, returnChangeType = False, returnChangeTypeCode = False, returnCreatedTime = False, returnEntityGroupKey = False, returnEntityGroupSetupRunID = False, returnEntityID = False, returnError = False, returnIdentifyingFields = False, returnIsProcessed = False, returnIsUpdated = False, returnModifiedTime = False, returnModule = False, returnNewFieldValues = False, returnNewValues = False, returnObject = False, returnObjectPrimaryKey = False, returnOriginalValues = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EntityGroupSetupEntity in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = locals()
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRunDetail/" + str(EntityGroupSetupRunDetailID), verb = "get", return_params_list = return_params_list)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-def modifyEntityGroupSetupRunDetail(EntityGroupSetupRunDetailID, EntityID = 1, setChangeType = None, setChangeTypeCode = None, setEntityGroupKey = None, setEntityGroupSetupRunID = None, setEntityID = None, setError = None, setIdentifyingFields = None, setIsProcessed = None, setIsUpdated = None, setModule = None, setNewFieldValues = None, setNewValues = None, setObject = None, setObjectPrimaryKey = None, setOriginalValues = None, setSchoolYearID = None, setRelationships = None, returnEntityGroupSetupRunDetailID = True, returnChangeType = False, returnChangeTypeCode = False, returnCreatedTime = False, returnEntityGroupKey = False, returnEntityGroupSetupRunID = False, returnEntityID = False, returnError = False, returnIdentifyingFields = False, returnIsProcessed = False, returnIsUpdated = False, returnModifiedTime = False, returnModule = False, returnNewFieldValues = False, returnNewValues = False, returnObject = False, returnObjectPrimaryKey = False, returnOriginalValues = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	if len(searchConditions) > 0:
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRunDetail/" + str(EntityGroupSetupRunDetailID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-def createEntityGroupSetupRunDetail(EntityID = 1, setChangeType = None, setChangeTypeCode = None, setEntityGroupKey = None, setEntityGroupSetupRunID = None, setEntityID = None, setError = None, setIdentifyingFields = None, setIsProcessed = None, setIsUpdated = None, setModule = None, setNewFieldValues = None, setNewValues = None, setObject = None, setObjectPrimaryKey = None, setOriginalValues = None, setSchoolYearID = None, setRelationships = None, returnEntityGroupSetupRunDetailID = True, returnChangeType = False, returnChangeTypeCode = False, returnCreatedTime = False, returnEntityGroupKey = False, returnEntityGroupSetupRunID = False, returnEntityID = False, returnError = False, returnIdentifyingFields = False, returnIsProcessed = False, returnIsUpdated = False, returnModifiedTime = False, returnModule = False, returnNewFieldValues = False, returnNewValues = False, returnObject = False, returnObjectPrimaryKey = False, returnOriginalValues = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupEntity/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupEntity/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRunDetail/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+def getEveryEntityGroupSetupRun(searchConditions = [], EntityID = 1, returnEntityGroupSetupRunID = False, returnCreatedTime = False, returnEntityGroupSetupID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	"""Get every EntityGroupSetupRun in the district.
 
-def getEveryEntity(EntityID = 1, page = 1, pageSize = 100, returnEntityID = True, returnAllowDualEnrollment = False, returnCampusID = False, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeEntityCode = False, returnDistrictID = False, returnEnforceAddressRangeDefaults = False, returnEntityCodeOrCombinedCodesFollettExport = False, returnEntityGroupCount = False, returnEntityIDHash = False, returnEntityMNID = False, returnExternalLinkEntityCount = False, returnIsDistrictWide = False, returnIsSystemWide = False, returnModifiedTime = False, returnName = False, returnReportToState = False, returnSchoolYearIDCurrent = False, returnTotalPlanEntityYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	This function returns a dataframe of every EntityGroupSetupRun in the district filtered by search conditions.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = locals()
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Entity/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-def getEntity(EntityID, returnEntityID = True, returnAllowDualEnrollment = False, returnCampusID = False, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeEntityCode = False, returnDistrictID = False, returnEnforceAddressRangeDefaults = False, returnEntityCodeOrCombinedCodesFollettExport = False, returnEntityGroupCount = False, returnEntityIDHash = False, returnEntityMNID = False, returnExternalLinkEntityCount = False, returnIsDistrictWide = False, returnIsSystemWide = False, returnModifiedTime = False, returnName = False, returnReportToState = False, returnSchoolYearIDCurrent = False, returnTotalPlanEntityYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Entity/" + str(EntityID), verb = "get", return_params_list = return_params_list)
+	if len(searchConditions) > 0:
 
-def modifyEntity(EntityID, setAllowDualEnrollment = None, setCode = None, setDistrictID = None, setEnforceAddressRangeDefaults = None, setIsDistrictWide = None, setIsSystemWide = None, setName = None, setReportToState = None, setSchoolYearIDCurrent = None, setRelationships = None, returnEntityID = True, returnAllowDualEnrollment = False, returnCampusID = False, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeEntityCode = False, returnDistrictID = False, returnEnforceAddressRangeDefaults = False, returnEntityCodeOrCombinedCodesFollettExport = False, returnEntityGroupCount = False, returnEntityIDHash = False, returnEntityMNID = False, returnExternalLinkEntityCount = False, returnIsDistrictWide = False, returnIsSystemWide = False, returnModifiedTime = False, returnName = False, returnReportToState = False, returnSchoolYearIDCurrent = False, returnTotalPlanEntityYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRun/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRun/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Entity/" + str(EntityID), verb = "post", return_params_list = return_params_list, payload = payload_params)
 
-def createEntity(EntityID = 1, setAllowDualEnrollment = None, setCode = None, setDistrictID = None, setEnforceAddressRangeDefaults = None, setIsDistrictWide = None, setIsSystemWide = None, setName = None, setReportToState = None, setSchoolYearIDCurrent = None, setRelationships = None, returnEntityID = True, returnAllowDualEnrollment = False, returnCampusID = False, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeEntityCode = False, returnDistrictID = False, returnEnforceAddressRangeDefaults = False, returnEntityCodeOrCombinedCodesFollettExport = False, returnEntityGroupCount = False, returnEntityIDHash = False, returnEntityMNID = False, returnExternalLinkEntityCount = False, returnIsDistrictWide = False, returnIsSystemWide = False, returnModifiedTime = False, returnName = False, returnReportToState = False, returnSchoolYearIDCurrent = False, returnTotalPlanEntityYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+def getEveryEntityGroupSetupRunDetail(searchConditions = [], EntityID = 1, returnEntityGroupSetupRunDetailID = False, returnChangeType = False, returnChangeTypeCode = False, returnCreatedTime = False, returnEntityGroupKey = False, returnEntityGroupSetupRunID = False, returnEntityID = False, returnError = False, returnIdentifyingFields = False, returnIsProcessed = False, returnIsUpdated = False, returnModifiedTime = False, returnModule = False, returnNewFieldValues = False, returnNewValues = False, returnObject = False, returnObjectPrimaryKey = False, returnOriginalValues = False, returnSchoolYearID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""Get every EntityGroupSetupRunDetail in the district.
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	This function returns a dataframe of every EntityGroupSetupRunDetail in the district filtered by search conditions.
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	"""
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Entity/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	params = locals()
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-def getEveryFiscalYear(EntityID = 1, page = 1, pageSize = 100, returnFiscalYearID = True, returnConflictAccountingUpdates = False, returnConflictAccountsPayableRuns = False, returnConflictAdditionDisposals = False, returnConflictBudgetAmendments = False, returnConflictCashReceiptDeposits = False, returnConflictDepreciations = False, returnConflictInvoices = False, returnConflictJournalEntries = False, returnConflictPayrollRuns = False, returnConflictPurchaseOrders = False, returnConflictWarehouseRequests = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEndDate = False, returnIsClosed = False, returnIsLockedByHR = False, returnModifiedTime = False, returnNumericYear = False, returnStartDate = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/FiscalYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	if len(searchConditions) > 0:
 
-def getFiscalYear(FiscalYearID, EntityID = 1, returnFiscalYearID = True, returnConflictAccountingUpdates = False, returnConflictAccountsPayableRuns = False, returnConflictAdditionDisposals = False, returnConflictBudgetAmendments = False, returnConflictCashReceiptDeposits = False, returnConflictDepreciations = False, returnConflictInvoices = False, returnConflictJournalEntries = False, returnConflictPayrollRuns = False, returnConflictPurchaseOrders = False, returnConflictWarehouseRequests = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEndDate = False, returnIsClosed = False, returnIsLockedByHR = False, returnModifiedTime = False, returnNumericYear = False, returnStartDate = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRunDetail/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/FiscalYear/" + str(FiscalYearID), verb = "get", return_params_list = return_params_list)
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/EntityGroupSetupRunDetail/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def modifyFiscalYear(FiscalYearID, EntityID = 1, setDescription = None, setDistrictID = None, setEndDate = None, setIsLockedByHR = None, setStartDate = None, setRelationships = None, returnFiscalYearID = True, returnConflictAccountingUpdates = False, returnConflictAccountsPayableRuns = False, returnConflictAdditionDisposals = False, returnConflictBudgetAmendments = False, returnConflictCashReceiptDeposits = False, returnConflictDepreciations = False, returnConflictInvoices = False, returnConflictJournalEntries = False, returnConflictPayrollRuns = False, returnConflictPurchaseOrders = False, returnConflictWarehouseRequests = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEndDate = False, returnIsClosed = False, returnIsLockedByHR = False, returnModifiedTime = False, returnNumericYear = False, returnStartDate = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryEntity(searchConditions = [], EntityID = 1, returnEntityID = False, returnAllowDualEnrollment = False, returnCampusID = False, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnDistrictCodeEntityCode = False, returnDistrictID = False, returnEnforceAddressRangeDefaults = False, returnEntityCodeOrCombinedCodesFollettExport = False, returnEntityGroupCount = False, returnEntityIDHash = False, returnEntityMNID = False, returnExternalLinkEntityCount = False, returnIlluminateEndGradeLevel = False, returnIlluminateSiteType = False, returnIlluminateSiteTypeCalculated = False, returnIlluminateSiteTypeOverride = False, returnIlluminateStartGradeLevel = False, returnIsCurrentlySelected = False, returnIsDistrictWide = False, returnIsSystemWide = False, returnModifiedTime = False, returnName = False, returnReportToState = False, returnSchoolYearIDCurrent = False, returnTotalPlanEntityYears = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	"""Get every Entity in the district.
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	This function returns a dataframe of every Entity in the district filtered by search conditions.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/FiscalYear/" + str(FiscalYearID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	"""
 
-def createFiscalYear(EntityID = 1, setDescription = None, setDistrictID = None, setEndDate = None, setIsLockedByHR = None, setStartDate = None, setRelationships = None, returnFiscalYearID = True, returnConflictAccountingUpdates = False, returnConflictAccountsPayableRuns = False, returnConflictAdditionDisposals = False, returnConflictBudgetAmendments = False, returnConflictCashReceiptDeposits = False, returnConflictDepreciations = False, returnConflictInvoices = False, returnConflictJournalEntries = False, returnConflictPayrollRuns = False, returnConflictPurchaseOrders = False, returnConflictWarehouseRequests = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnEndDate = False, returnIsClosed = False, returnIsLockedByHR = False, returnModifiedTime = False, returnNumericYear = False, returnStartDate = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = locals()
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/FiscalYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	if len(searchConditions) > 0:
 
-def getEveryRoom(EntityID = 1, page = 1, pageSize = 100, returnRoomID = True, returnBuildingCodeRoomNumber = False, returnBuildingID = False, returnCreatedTime = False, returnDescription = False, returnFormattedPhoneNumber = False, returnMaxConcurrentSections = False, returnMaxSeats = False, returnModifiedTime = False, returnPhoneExtension = False, returnPhoneNumber = False, returnPhoneNumberIsInternational = False, returnRoomNumber = False, returnRoomNumberDescription = False, returnRoomTypeID = False, returnSquareFootage = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Entity/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Room/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Entity/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getRoom(RoomID, EntityID = 1, returnRoomID = True, returnBuildingCodeRoomNumber = False, returnBuildingID = False, returnCreatedTime = False, returnDescription = False, returnFormattedPhoneNumber = False, returnMaxConcurrentSections = False, returnMaxSeats = False, returnModifiedTime = False, returnPhoneExtension = False, returnPhoneNumber = False, returnPhoneNumberIsInternational = False, returnRoomNumber = False, returnRoomNumberDescription = False, returnRoomTypeID = False, returnSquareFootage = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryFiscalYear(searchConditions = [], EntityID = 1, returnFiscalYearID = False, returnConflictAccountingUpdates = False, returnConflictAccountsPayableRuns = False, returnConflictAdditionDisposals = False, returnConflictBudgetAmendments = False, returnConflictCashReceiptDeposits = False, returnConflictDepreciations = False, returnConflictInvoices = False, returnConflictJournalEntries = False, returnConflictPayrollRuns = False, returnConflictPurchaseOrders = False, returnConflictWarehouseRequests = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnDynamicRelationshipID = False, returnEndDate = False, returnIsClosed = False, returnIsLockedByHR = False, returnModifiedTime = False, returnNumericYear = False, returnStartDate = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every FiscalYear in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Room/" + str(RoomID), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every FiscalYear in the district filtered by search conditions.
 
-def modifyRoom(RoomID, EntityID = 1, setBuildingID = None, setDescription = None, setMaxConcurrentSections = None, setMaxSeats = None, setPhoneExtension = None, setPhoneNumber = None, setPhoneNumberIsInternational = None, setRoomNumber = None, setRoomTypeID = None, setSquareFootage = None, setRelationships = None, returnRoomID = True, returnBuildingCodeRoomNumber = False, returnBuildingID = False, returnCreatedTime = False, returnDescription = False, returnFormattedPhoneNumber = False, returnMaxConcurrentSections = False, returnMaxSeats = False, returnModifiedTime = False, returnPhoneExtension = False, returnPhoneNumber = False, returnPhoneNumberIsInternational = False, returnRoomNumber = False, returnRoomNumberDescription = False, returnRoomTypeID = False, returnSquareFootage = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Room/" + str(RoomID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-def createRoom(EntityID = 1, setBuildingID = None, setDescription = None, setMaxConcurrentSections = None, setMaxSeats = None, setPhoneExtension = None, setPhoneNumber = None, setPhoneNumberIsInternational = None, setRoomNumber = None, setRoomTypeID = None, setSquareFootage = None, setRelationships = None, returnRoomID = True, returnBuildingCodeRoomNumber = False, returnBuildingID = False, returnCreatedTime = False, returnDescription = False, returnFormattedPhoneNumber = False, returnMaxConcurrentSections = False, returnMaxSeats = False, returnModifiedTime = False, returnPhoneExtension = False, returnPhoneNumber = False, returnPhoneNumberIsInternational = False, returnRoomNumber = False, returnRoomNumberDescription = False, returnRoomTypeID = False, returnSquareFootage = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	if len(searchConditions) > 0:
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Room/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/FiscalYear/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/FiscalYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-def getEveryRoomType(EntityID = 1, page = 1, pageSize = 100, returnRoomTypeID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+def getEveryRoom(searchConditions = [], EntityID = 1, returnRoomID = False, returnBuildingCodeRoomNumber = False, returnBuildingID = False, returnCreatedTime = False, returnDescription = False, returnFormattedPhoneNumber = False, returnMaxConcurrentSections = False, returnMaxSeats = False, returnModifiedTime = False, returnPhoneExtension = False, returnPhoneNumber = False, returnPhoneNumberIsInternational = False, returnRoomNumber = False, returnRoomNumberDescription = False, returnRoomTypeID = False, returnSeatsAvailableForDateRangeAndDisplayPeriods = False, returnSquareFootage = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	"""Get every Room in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/RoomType/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	This function returns a dataframe of every Room in the district filtered by search conditions.
 
-def getRoomType(RoomTypeID, EntityID = 1, returnRoomTypeID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/RoomType/" + str(RoomTypeID), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def modifyRoomType(RoomTypeID, EntityID = 1, setCode = None, setDescription = None, setDistrictID = None, setRelationships = None, returnRoomTypeID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if len(searchConditions) > 0:
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/RoomType/" + str(RoomTypeID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-def createRoomType(EntityID = 1, setCode = None, setDescription = None, setDistrictID = None, setRelationships = None, returnRoomTypeID = True, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Room/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/Room/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+def getEveryRoomType(searchConditions = [], EntityID = 1, returnRoomTypeID = False, returnCode = False, returnCodeDescription = False, returnCreatedTime = False, returnDescription = False, returnDistrictID = False, returnModifiedTime = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/RoomType/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	"""Get every RoomType in the district.
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	This function returns a dataframe of every RoomType in the district filtered by search conditions.
 
-def getEverySchoolYear(EntityID = 1, page = 1, pageSize = 100, returnSchoolYearID = True, returnCreatedTime = False, returnDescription = False, returnIsCurrentYearForProvidedEntity = False, returnIsUpcomingYearForProvidedEntity = False, returnModifiedTime = False, returnNextNumericYear = False, returnNumericYear = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	params = locals()
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/SchoolYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def getSchoolYear(SchoolYearID, EntityID = 1, returnSchoolYearID = True, returnCreatedTime = False, returnDescription = False, returnIsCurrentYearForProvidedEntity = False, returnIsUpcomingYearForProvidedEntity = False, returnModifiedTime = False, returnNextNumericYear = False, returnNumericYear = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	if len(searchConditions) > 0:
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/SchoolYear/" + str(SchoolYearID), verb = "get", return_params_list = return_params_list)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-def modifySchoolYear(SchoolYearID, EntityID = 1, setDescription = None, setNumericYear = None, setRelationships = None, returnSchoolYearID = True, returnCreatedTime = False, returnDescription = False, returnIsCurrentYearForProvidedEntity = False, returnIsUpcomingYearForProvidedEntity = False, returnModifiedTime = False, returnNextNumericYear = False, returnNumericYear = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/RoomType/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/RoomType/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/SchoolYear/" + str(SchoolYearID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+def getEverySchoolYear(searchConditions = [], EntityID = 1, returnSchoolYearID = False, returnCreatedTime = False, returnDescription = False, returnIsCurrentYearForProvidedEntity = False, returnIsUpcomingYearForProvidedEntity = False, returnModifiedTime = False, returnNextNumericYear = False, returnNumericYear = False, returnStudentAwardID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-def createSchoolYear(EntityID = 1, setDescription = None, setNumericYear = None, setRelationships = None, returnSchoolYearID = True, returnCreatedTime = False, returnDescription = False, returnIsCurrentYearForProvidedEntity = False, returnIsUpcomingYearForProvidedEntity = False, returnModifiedTime = False, returnNextNumericYear = False, returnNumericYear = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	"""Get every SchoolYear in the district.
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	This function returns a dataframe of every SchoolYear in the district filtered by search conditions.
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	"""
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	params = locals()
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/SchoolYear/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-def getEveryStateDistrictMN(EntityID = 1, page = 1, pageSize = 100, returnStateDistrictMNID = True, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnStateDistrictTypeCodeMNID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[3,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	if len(searchConditions) > 0:
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/StateDistrictMN/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params_list)
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
 
-def getStateDistrictMN(StateDistrictMNID, EntityID = 1, returnStateDistrictMNID = True, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnStateDistrictTypeCodeMNID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/SchoolYear/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
 
-	return_params_list = list(params[[(value is True) for value in params.value]].index)
-	if params.iloc[2,:].name == "".join(return_params_list):
-		return_params_list = list(params[[("return" in name) for name in params.index.to_series()]].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/SchoolYear/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/StateDistrictMN/" + str(StateDistrictMNID), verb = "get", return_params_list = return_params_list)
 
-def modifyStateDistrictMN(StateDistrictMNID, EntityID = 1, setCode = None, setName = None, setStateDistrictTypeCodeMNID = None, setRelationships = None, returnStateDistrictMNID = True, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnStateDistrictTypeCodeMNID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+def getEveryStateDistrictMN(searchConditions = [], EntityID = 1, returnStateDistrictMNID = False, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnStateDistrictTypeCodeMNID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, page = 1, pageSize = 100000, conditionGroupType = "And"):
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	"""Get every StateDistrictMN in the district.
 
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	This function returns a dataframe of every StateDistrictMN in the district filtered by search conditions.
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(), :]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	"""
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/StateDistrictMN/" + str(StateDistrictMNID), verb = "post", return_params_list = return_params_list, payload = payload_params)
+	params = locals()
 
-def createStateDistrictMN(EntityID = 1, setCode = None, setName = None, setStateDistrictTypeCodeMNID = None, setRelationships = None, returnStateDistrictMNID = True, returnCode = False, returnCodeName = False, returnCreatedTime = False, returnModifiedTime = False, returnName = False, returnStateDistrictTypeCodeMNID = False, returnUserIDCreatedBy = False, returnUserIDModifiedBy = False, returnRelationships = False):
+	params = pd.DataFrame(list(zip(params.keys(), params.values())), columns = ["Param", "Value"])
 
-	params = pd.DataFrame.from_dict(locals(), orient = "index", columns = ["value"])
+	return_params = params.query('Param.str.startswith("return")', engine = 'python')
 
-	return_params_list = list(params.loc[lambda x: ((x.value & (x.index.to_series().str.contains("return"))) | (~(x.value.isnull()) & (x.index.to_series().str.contains("set")))) & (x.index.to_series() != "EntityID"),:].index)
-	return_params_list = [re.sub("^return", "", param) for param in return_params_list]
-	return_params_list = [re.sub("^set", "", param) for param in return_params_list]
-	return_params_list = list(set(return_params_list))
+	if not any(return_params.Value):
+		return_params = list(return_params.assign(Value = True).Param)
+	else:
+		return_params = list(return_params.query('Value == True').Param)
 
-	payload_params = params.loc[lambda x: x.index.to_series().str.contains("set") & ~x.value.isnull(),:]
-	payload_params.index = [re.sub("^set", "", name) for name in payload_params.index]
-	payload_params = dict({"DataObject": dict(payload_params["value"])})
-	payload_params = json.dumps(payload_params)
+	return_params = [re.sub("^return", '', param) for param in return_params]
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/StateDistrictMN/", verb = "put", return_params_list = return_params_list, payload = payload_params)
+	if len(searchConditions) > 0:
 
-	return make_request(endpoint = "/Generic/" + str(EntityID) + "/Attendance/AttendancePeriod/" + str(AttendancePeriodID), verb = "delete")
+		searchConditions = params.query('Param == "searchConditions"').Value[0]
+
+		payload_params = formatSearchConditionsPayload(searchConditions, conditionGroupType)
+
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/StateDistrictMN/" + str(page) + "/" + str(pageSize), verb = "post", return_params_list = return_params, payload = payload_params)
+
+	else:
+		return make_request(endpoint = "/Generic/" + str(EntityID) + "/District/StateDistrictMN/" + str(page) + "/" + str(pageSize), verb = "get", return_params_list = return_params)
