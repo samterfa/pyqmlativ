@@ -10,9 +10,9 @@ setup(name='pyqmlativ',
       packages=['pyqmlativ'],
       install_requires=[
          #   'json',
-         #   'pandas',
+            'pandas',
          #   'os',
          #   'requests',
-         #   'requests_oauthlib',
+            'requests_oauthlib'
       ],
       zip_safe=False)
